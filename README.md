@@ -8,3 +8,9 @@ kernel with the provided arguments and initramfs.
 
 This repository contains instructions and code for assembling System
 Transparency OS images.
+
+----
+
+- example.makefile
+- debian tooling or podman
+- put your config in the config/ directory

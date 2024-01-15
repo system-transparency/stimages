@@ -1,0 +1,37 @@
+#! /bin/sh
+set -eu
+
+# This script is run by st-init.service after /stdata has been mounted
+# but before networking has been started.
+
+myfqdn=localhost.localdomain
+if [ -r /stdata/etc/hostname ]; then
+    myfqdn="$(cat /stdata/etc/hostname)"
+    myhostname="$(echo "$myfqdn" | cut -d . -f 1)"
+    hostnamectl set-hostname "${myhostname}"
+    echo "$myfqdn" > /etc/mailname
+fi
+
+if [ -r /stdata/etc/hosts ]; then
+    cp /stdata/etc/hosts /etc/hosts
+else
+    cat > /etc/hosts <<EOF
+127.0.0.1	localhost
+127.0.1.1	${myfqdn} ${myhostname}
+::1		localhost ${myfqdn} ${myhostname}
+EOF
+fi
+
+if [ -r /stdata/etc/fstab.local ]; then
+    cat /stdata/etc/fstab.local >> /etc/fstab
+    mount -a
+fi
+
+if [ -r /stdata/etc/nftables.conf ]; then
+    cp -p /stdata/etc/nftables.conf /etc/
+fi
+
+if [ -r /stdata/etc/ssh/ssh_host_ed25519_key ]; then
+    mkdir -p /etc/ssh
+    cp -p /stdata/etc/ssh/ssh_host_ed25519_key /etc/ssh/
+fi

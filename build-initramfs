@@ -1,0 +1,109 @@
+#! /bin/bash
+set -eu
+
+CONFIG="$1"; shift
+FLAVOUR="$1"; shift
+OUT="$1"; shift			# NOTE: Relative to $(dirname $0)
+PKGLIST_BASE="$1"; shift
+
+KERNEL_DEB= # Optional: Path to Debian package (.deb) with kernel to use
+[ $# -gt 0 ] && { KERNEL_DEB="$1"; shift; }
+
+DEBIAN_RELEASE=bookworm
+
+check_build_deps() {
+    return 1			# Fail => run in container
+}
+
+CONTAIN=			# Don't run in container
+check_build_deps || CONTAIN=./contain
+
+OUTDIR=$(dirname "$OUT")
+[ -d "$OUTDIR" ] || mkdir -p "$OUTDIR"
+rootfs="$OUTDIR"/rootfs
+
+### Collect root password
+if [[ -r ${CONFIG}/pw.root ]]; then
+    PW_ROOT="$(cat "${CONFIG}/pw.root")"
+else
+    read -rs -p "pw.troot: " PW_ROOT
+    echo
+fi
+
+build_rootfs() {
+    mkdir -p "$rootfs"
+
+    ### Build APT sources.list
+    sources_list="$OUTDIR"/sources.list
+    case "$DEBIAN_RELEASE" in	# https://wiki.debian.org/SourcesList
+	bookworm)
+	    # NOTE: non-free-firmware for intel-microcode on physical machines
+	    DEBIAN_COMPONENTS="main non-free-firmware"
+	    cat >$sources_list <<EOF
+deb https://ftp.acc.umu.se/debian/          $DEBIAN_RELEASE          $DEBIAN_COMPONENTS
+deb https://ftp.acc.umu.se/debian/          $DEBIAN_RELEASE-updates  $DEBIAN_COMPONENTS
+deb https://deb.debian.org/debian-security/ $DEBIAN_RELEASE-security $DEBIAN_COMPONENTS
+EOF
+	    ;;
+    esac
+
+    ### Run mmdebstrap
+    # TODO: use $APT_CACHER_NG for local proxy, add
+    #     --aptopt='Acquire::http { Proxy "http://localhost:3142"; }' \
+    verbosity=			# empty, --silent or --verbose
+    mmdebstrap_flags="
+	"$verbosity"
+	--architectures=amd64
+	--variant=minbase
+	--include=$(rg -v '^[[:space:]]*#|^[[:space:]]*$' ${PKGLIST_BASE} | tr '\n' ',')"
+    if [ -f ${CONFIG}/pkgs/${FLAVOUR}.pkglist ]; then
+	mmdebstrap_flags+=" --include=$(rg -v '^[[:space:]]*#|^[[:space:]]*$' ${CONFIG}/pkgs/${FLAVOUR}.pkglist | tr '\n' ',')"
+    fi
+
+    $CONTAIN mmdebstrap --mode sudo $mmdebstrap_flags $DEBIAN_RELEASE $rootfs $sources_list
+    rm "$sources_list"
+}
+
+copy_kernel() {
+    ### Copy kernel to or from rootfs
+    if [ -f "$KERNEL_DEB" ]; then
+	echo "$0: copy kernel to rootfs NYI"
+	exit 1
+    else
+	cp -v "$rootfs/boot/vmlinuz-"* "$OUTDIR"/
+	ln -sf "$(cd "${OUTDIR}" && ls vmlinuz-* | tail -1)" "$OUTDIR"/vmlinuz
+    fi
+}
+	
+configure_rootfs() {
+    ### Configure rootfs (TODO: use mmdebstrap hooks instead)
+    sudo cp -r --no-dereference --preserve=links,mode,timestamps "${CONFIG}"/overlays/${FLAVOUR}/* "$rootfs"/
+    sudo "$CONFIG"/scripts/setup.sh "$rootfs" "$CONFIG"
+    cp "$CONFIG"/scripts/setup-in-chroot.sh "$rootfs"/tmp/
+    sudo chroot $rootfs /tmp/setup-in-chroot.sh
+    rm "$rootfs"/tmp/setup-in-chroot.sh
+    sudo chroot $rootfs /bin/bash -c "echo \"root:${PW_ROOT}\" | chpasswd"
+    sudo "$CONFIG"/scripts/cleanup.sh "$rootfs"
+}
+
+create_cpio_archive() {
+    ### Create cpio archive
+    # TODO: prepend cpio archive with /kernel/x86/microcode/GenuineIntel.bin containing /lib/firmware/intel-ucode/* to $OUT, for targeting real hw
+    # NOTE: If mmdebstrap was run in a container, cpio needs to be run in a container because file ownership.
+    # BUG: the redirect to /c/$OUT works only in container
+    cat >"$OUTDIR"/mkcpio.sh <<EOF
+set -eu
+cd $rootfs
+find . | LC_ALL=C sort | cpio --quiet -o -H newc | pigz > /c/"$OUT"
+EOF
+    $CONTAIN sudo /bin/bash "$OUTDIR"/mkcpio.sh
+    rm "$OUTDIR"/mkcpio.sh
+}
+
+####################
+[ -d "$rootfs" ] || build_rootfs
+copy_kernel
+configure_rootfs
+create_cpio_archive
+
+# Emacs (-*- shell-mode -*-)

@@ -1,0 +1,87 @@
+#! /bin/bash
+set -eu
+
+[ -z "$GOPATH" ] && { echo "$0: missing GOPATH"; exit 1; }
+[ -d "$GOPATH" ] || { echo "$0: missing $GOPATH"; exit 1; }
+
+OUT="$1"; shift
+ROOTCERT="$1"; shift
+
+GOBIN=$GOPATH/bin
+STBOOT_PKG_PATH=system-transparency.org/stboot
+STBOOT_VERSION=v0.2.2
+UROOT_PKG_PATH=github.com/u-root/u-root
+UROOT_VERSION=v0.10.0
+OUTDIR="$(dirname "$OUT")"
+IDIR="$OUTDIR/stboot"		# Intermediate output directory
+mkdir -p "$IDIR"
+
+install_dependencies() {
+    go install system-transparency.org/stmgr@latest
+
+    go install ${UROOT_PKG_PATH}@${UROOT_VERSION}
+    env GO111MODULE=off go get -d ${UROOT_PKG_PATH}/...
+    git -C $GOPATH/src/$UROOT_PKG_PATH fetch --quiet
+    git -C $GOPATH/src/$UROOT_PKG_PATH checkout --quiet $UROOT_VERSION
+
+    env GO111MODULE=off go get -d ${STBOOT_PKG_PATH}/...
+    git -C $GOPATH/src/$STBOOT_PKG_PATH fetch --quiet
+    git -C $GOPATH/src/$STBOOT_PKG_PATH checkout --quiet $STBOOT_VERSION
+}    
+install_dependencies
+
+create_default_stboot_config() {
+    stmgr hostconfig check '
+    {
+      "network_mode": "dhcp",
+      "host_ip": null,
+      "gateway": null,
+      "dns": null,
+      "network_interfaces": null,
+      "ospkg_pointer": "http://10.0.2.2:8080/vdab.json",
+      "identity": null,
+      "authentication": null,
+      "bonding_mode": null,
+      "bond_name": ""
+    }
+    ' > ${IDIR}/host_config.json
+
+    stmgr trustpolicy check '
+    {
+      "ospkg_signature_threshold": 1,
+      "ospkg_fetch_method": "network"
+    }
+    ' > ${IDIR}/trust_policy.json
+}    
+
+uroot_files="
+	-files ${ROOTCERT}:etc/trust_policy/ospkg_signing_root.pem
+	-files contrib/stboot/isrgrootx1.pem:etc/ssl/certs/isrgrootx1.pem
+	-files ${IDIR}/host_config.json:etc/host_configuration.json
+	-files ${IDIR}/trust_policy.json:etc/trust_policy/trust_policy.json"
+uroot_pkgs="
+	github.com/u-root/u-root/cmds/core/init
+	system-transparency.org/stboot"
+
+create_default_stboot_config
+
+env GO111MODULE=off $GOBIN/u-root \
+     -build=bb \
+     -uinitcmd="stboot -loglevel=d" \
+     -defaultsh="" \
+     -uroot-source $GOPATH/src/$UROOT_PKG_PATH \
+     -o ${IDIR}/stboot.cpio \
+     $uroot_files \
+     $uroot_pkgs
+gzip -f ${IDIR}/stboot.cpio
+
+[[ -f "$OUTDIR"/stboot.iso ]] && mv "$OUTDIR"/stboot.iso "$OUTDIR"/stboot.iso.BAK
+# NOTE: Simply using an arbitrary stimage kernel will most likely fail with "no modules found matching '/lib/modules/*.ko'"
+stmgr uki create \
+      -format iso \
+      -out "$OUT" \
+      -kernel "contrib/stboot/linuxboot.vmlinuz" \
+      -cmdline console=ttyS0,115200 \
+      -initramfs ${IDIR}/stboot.cpio.gz
+
+# Emacs (-*- shell-mode -*-)

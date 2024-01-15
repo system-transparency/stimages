@@ -1,0 +1,13 @@
+#! /bin/bash
+set -eu
+
+CONFIG="$1"; shift
+FLAVOUR="$1"; shift
+OUT="$1"; shift
+
+# NOTE: Not building a kernel, just verifying that the initramfs build
+# process has moved/copied a kernel to $OUT.
+
+[ -f "$OUT" ] || { echo "$0: missing $OUT"; exit 1; }
+
+# Emacs (-*- shell-mode -*-)

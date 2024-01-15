@@ -1,0 +1,12 @@
+bridge-utils
+dnsmasq-base
+intel-microcode
+libvirt-clients
+libvirt-daemon-system
+lvm2
+mdadm
+ovmf
+qemu-system-x86
+qemu-utils
+smartmontools
+virtinst

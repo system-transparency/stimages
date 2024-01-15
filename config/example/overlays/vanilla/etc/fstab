@@ -1,0 +1,2 @@
+# The STDATA partition, used by stboot and OS
+PARTLABEL=STDATA /stdata ext4 ro,noexec

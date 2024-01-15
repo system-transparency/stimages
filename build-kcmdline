@@ -1,0 +1,10 @@
+#! /bin/bash
+set -eu
+
+CONFIG="$1"; shift
+FLAVOUR="$1"; shift
+OUT="$1"; shift
+
+echo "console=ttyS0,115200n8 ro rdinit=/lib/systemd/systemd systemd.log_level=debug" > "$OUT"
+
+# Emacs (-*- shell-mode -*-)

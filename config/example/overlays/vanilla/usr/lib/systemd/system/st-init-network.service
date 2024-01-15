@@ -1,0 +1,11 @@
+[Unit]
+Description=Copy networking config files from the STDATA partition
+RequiresMountsFor=/stdata
+Before=network-pre.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/st-init-network
+
+[Install]
+WantedBy=basic.target

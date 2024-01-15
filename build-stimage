@@ -1,0 +1,45 @@
+#! /bin/bash
+set -eu
+
+# CONFIG="$1"; shift
+# FLAVOUR="$1"; shift
+OUT="$1"; shift			# Path to where to store produced ST image.
+
+NETBOOT_URL="$1"; shift;	# URL from where to download the ST image.
+KERNEL="$1"; shift		# Path to file with kernel.
+KCMDLINE="$1"; shift		# Path to file with kernel command line.
+INITRAMFS="$1"; shift		# Path to file with initramfs.
+# Subsequent arguments are paths to signing certs and keys.
+
+stmgr ospkg create \
+      --label="Example ST image" \
+      --out="$OUT" \
+      --kernel="$KERNEL" \
+      --cmdline="$(cat "$KCMDLINE")" \
+      --initramfs="$INITRAMFS" \
+      --url="$NETBOOT_URL"
+
+certs=()
+keys=()
+looking_at_cert=1
+while [ $# -gt 0 ]; do
+    if [[ $looking_at_cert = 1 ]]; then
+	certs+=("$1")
+	looking_at_cert=0
+    else
+	keys+=("$1")
+	looking_at_cert=1
+    fi
+    shift
+done
+[[ ${#certs[@]} -eq ${#keys[@]} ]] || { "$0: signing certs and keys mismatch"; exit 1; }
+
+for k in "${!certs[@]}"; do
+    key=${keys[$k]}
+    cert=${certs[$k]}
+    stmgr ospkg sign --cert "$cert" --key "$key" --ospkg "$OUT"
+done
+
+chmod 644 "$OUT" "$(dirname "$OUT")"/"$(basename "$OUT" .zip)".json
+
+# Emacs (-*- shell-mode -*-)

@@ -1,0 +1,11 @@
+[Unit]
+Description=Initialise ST-booted system from /stdata
+RequiresMountsFor=/stdata
+Before=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/st-init
+
+[Install]
+WantedBy=basic.target

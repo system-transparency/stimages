@@ -1,0 +1,2 @@
+Mountpoint for partition STDATA, to be mounted by st-init-stdata.service.
+Try sudo systemctl start st-init-stdata.
