@@ -1,5 +1,6 @@
 [Unit]
 Description=ST example service
+After=network.target
 
 [Service]
 Type=exec
