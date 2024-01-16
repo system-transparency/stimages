@@ -93,8 +93,7 @@ create_cpio_archive() {
     # BUG: the redirect to /c/$OUT works only in container
     cat >"$OUTDIR"/mkcpio.sh <<EOF
 set -eu
-cd $rootfs
-find . | LC_ALL=C sort | cpio --quiet -o -H newc | pigz > /c/"$OUT"
+(cd $rootfs && find . | LC_ALL=C sort | cpio --quiet -o -H newc | pigz) > "$OUT"
 EOF
     $CONTAIN sudo /bin/bash "$OUTDIR"/mkcpio.sh
     rm "$OUTDIR"/mkcpio.sh
