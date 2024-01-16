@@ -29,7 +29,7 @@ clean:
 	-rm -rf $(BUILD)
 distclean: clean
 	-rm -rf $(KEYS) $(CA) $(GUEST_DATADIR)
-	-([ -n "$$GOPATH" ] && [ -d "$$GOPATH" ] && echo "Please clean up GOPATH ($$GOPATH)")
+	-([ -n "$$GOPATH" ] && [ -d "$$GOPATH" ] && echo "NOTE: Leaving GOPATH ($$GOPATH) as is")
 
 ####################
 $(BUILD)/stimage.zip: $(KERNEL) $(CMDLINE) $(INITRAMFS) $(KEYS)
