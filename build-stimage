@@ -11,35 +11,63 @@ KCMDLINE="$1"; shift		# Path to file with kernel command line.
 INITRAMFS="$1"; shift		# Path to file with initramfs.
 # Subsequent arguments are paths to signing certs and keys.
 
-stmgr ospkg create \
-      --label="Example ST image" \
-      --out="$OUT" \
-      --kernel="$KERNEL" \
-      --cmdline="$(cat "$KCMDLINE")" \
-      --initramfs="$INITRAMFS" \
-      --url="$NETBOOT_URL"
-
-certs=()
-keys=()
-looking_at_cert=1
-while [ $# -gt 0 ]; do
-    if [[ $looking_at_cert = 1 ]]; then
-	certs+=("$1")
-	looking_at_cert=0
-    else
-	keys+=("$1")
-	looking_at_cert=1
+ensure_stmgr() {
+    [ -z "$GOPATH" ] && GOPATH=$HOME/go
+    if [ -z "$(command -v stmgr)" ]; then
+	if [[ -n "$GOPATH" && -x "$GOPATH"/bin/stmgr ]]; then
+	    PATH=$PATH:"$GOPATH"/bin
+	else
+	    [ -z "$(command -v go)" ] && { echo "$0: missing a go compiler"; exit 1; }
+	    read -p "Installing stmgr with GOPATH=$GOPATH, ok? [y/N] " yesno
+	    [ "$yesno" != "y" ] && { echo "$0: missing stmgr in PATH"; exit 1; }
+	    go install system-transparency.org/stmgr@latest
+	    [ -z "$(command -v stmgr)" ] && PATH=$PATH:"$GOPATH"/bin
+	fi
     fi
-    shift
-done
-[[ ${#certs[@]} -eq ${#keys[@]} ]] || { "$0: signing certs and keys mismatch"; exit 1; }
+}
 
-for k in "${!certs[@]}"; do
-    key=${keys[$k]}
-    cert=${certs[$k]}
-    stmgr ospkg sign --cert "$cert" --key "$key" --ospkg "$OUT"
-done
+create_image() {
+    stmgr ospkg create \
+	  --label="Example ST image" \
+	  --out="$OUT" \
+	  --kernel="$KERNEL" \
+	  --cmdline="$(cat "$KCMDLINE")" \
+	  --initramfs="$INITRAMFS" \
+	  --url="$NETBOOT_URL"
+}
 
-chmod 644 "$OUT" "$(dirname "$OUT")"/"$(basename "$OUT" .zip)".json
+sign_image() {
+    local certs=()
+    local keys=()
+
+    local looking_at_cert=1
+    while [ $# -gt 0 ]; do
+	if [[ $looking_at_cert = 1 ]]; then
+	    certs+=("$1")
+	    looking_at_cert=0
+	else
+	    keys+=("$1")
+	    looking_at_cert=1
+	fi
+	shift
+    done
+    [[ ${#certs[@]} -eq ${#keys[@]} ]] || { "$0: signing certs and keys mismatch"; exit 1; }
+
+    for k in "${!certs[@]}"; do
+	local key=${keys[$k]}
+	local cert=${certs[$k]}
+
+	stmgr ospkg sign --cert "$cert" --key "$key" --ospkg "$OUT"
+    done
+}
+
+chmod_image() {
+    chmod 644 "$OUT" "$(dirname "$OUT")"/"$(basename "$OUT" .zip)".json
+}
+
+ensure_stmgr
+create_image
+sign_image
+chmod_image
 
 # Emacs (-*- shell-mode -*-)
