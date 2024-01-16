@@ -4,6 +4,7 @@ set -eu
 [ -z "$GOPATH" ] && { echo "$0: missing GOPATH"; exit 1; }
 [ -d "$GOPATH" ] || { echo "$0: missing $GOPATH"; exit 1; }
 
+STIMAGE_NAME="$1"; shift
 OUT="$1"; shift
 ROOTCERT="$1"; shift
 
@@ -31,20 +32,19 @@ install_dependencies() {
 install_dependencies
 
 create_default_stboot_config() {
-    $GOBIN/stmgr hostconfig check '
-    {
-      "network_mode": "dhcp",
-      "host_ip": null,
-      "gateway": null,
-      "dns": null,
-      "network_interfaces": null,
-      "ospkg_pointer": "http://10.0.2.2:8080/vdab.json",
-      "identity": null,
-      "authentication": null,
-      "bonding_mode": null,
-      "bond_name": ""
-    }
-    ' > ${IDIR}/host_config.json
+    HC="{
+      \"network_mode\": \"dhcp\",
+      \"host_ip\": null,
+      \"gateway\": null,
+      \"dns\": null,
+      \"network_interfaces\": null,
+      \"ospkg_pointer\": \"http://10.0.2.2:8080/"${STIMAGE_NAME}".json\",
+      \"identity\": null,
+      \"authentication\": null,
+      \"bonding_mode\": null,
+      \"bond_name\": \"\"
+    }"
+    $GOBIN/stmgr hostconfig check "$HC" > ${IDIR}/host_config.json
 
     $GOBIN/stmgr trustpolicy check '
     {

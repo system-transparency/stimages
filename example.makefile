@@ -45,7 +45,7 @@ $(BUILD)/debian-bookworm.cpio.gz: $(CONFIG)/pkgs/000base.pkglist
 	./build-initramfs $(CONFIG) $(FLAVOUR) $@ $^
 
 $(BUILD)/stboot.iso: keys/rootcert.pem
-	./contrib/stboot/build-stboot $@ $^
+	./contrib/stboot/build-stboot $(STIMAGE_NAME) $@ $^
 
 ####################
 keys/rootcert.pem keys/rootkey.pem:
