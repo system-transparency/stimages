@@ -73,7 +73,7 @@ env GO111MODULE=off $GOBIN/u-root \
      -o ${IDIR}/stboot.cpio \
      $uroot_files \
      $uroot_pkgs
-gzip -f ${IDIR}/stboot.cpio
+pigz -f ${IDIR}/stboot.cpio
 
 [[ -f "$OUTDIR"/stboot.iso ]] && mv "$OUTDIR"/stboot.iso "$OUTDIR"/stboot.iso.BAK
 # NOTE: Simply using an arbitrary stimage kernel will most likely fail with "no modules found matching '/lib/modules/*.ko'"
