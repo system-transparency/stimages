@@ -1,0 +1,15 @@
+#! /bin/bash
+set -u
+
+fail=0
+for cmd in $@; do
+    if [ -z $(command -v "$cmd") ]; then
+	echo "$cmd: command not found"
+	fail=1
+    fi
+done
+
+[ $fail = 0 ] && exit 0
+exit 1
+
+# Emacs (-*- shell-mode -*-)

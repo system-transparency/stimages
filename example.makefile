@@ -121,3 +121,11 @@ install-vm: $(STBOOT) $(OVMF_CODE) $(GUEST_STDATA) wwworkaround
 		--network $(VM_NETWORK) \
 		--disk "$(STBOOT)",format=raw,readonly=on \
 		--disk "$(GUEST_STDATA)",format=raw
+
+####################
+
+# You don't need all of these installed for anything, but if you have
+# all of them installed you should be able to build everything.
+.PHONY: check-all-dependencies
+check-all-dependencies:
+	./check-deps chroot cpio find git go losetup mkfs mmdebstrap mount nc parted pigz podman qemu-system-x86_64 stmgr sudo umount virt-install

@@ -12,17 +12,22 @@ Transparency OS images.
 
 ----
 
-For playing around, try running `make` without arguments.
+For playing around, try running `make` without any arguments.
 
 The file example.makefile will try to run everything needed in order
-to produce an example ST image and write it to
+to produce an example ST image and write the result to
 build/stimage.{json,zip}.
 
-You will need a go compiler and a long list of other tools installed
+You will need a go compiler and a long list of other tools
 to complete the build. If you're on a system without mmdebstrap,
 installing podman will be necessary. Building the initramfs and
-building the STDATA filesystem image currently require sudo.
+the STDATA filesystem image currently require sudo.
 
+If you get tired of hunting down all the dependencies, `make
+check-all-dependencies` will list all commands missing on your
+system for running _everything_.
+
+----
 
 To boot your image, try running `make boot`.
 
