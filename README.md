@@ -8,7 +8,7 @@ arguments and initramfs.
 This repository contains instructions and code for assembling System
 Transparency OS images.
 
-[stboot](https://git.glasklar.is/system-transparency/core/stboot)
+[stboot]: https://git.glasklar.is/system-transparency/core/stboot
 
 ----
 
