@@ -32,7 +32,7 @@ if [ "$DHCP" = no ]; then
     [[ -n "${IPV4-}" && -z "${GW4-}" ]] && GW4=$(ipcalc --minaddr --no-decorate "${IPV4}/${MASK4}")
     [[ -n "${IPV6-}" && -z "${GW6-}" ]] && GW6=$(ipcalc --minaddr --no-decorate "${IPV6}/${MASK6}")1
 fi
-echo -e "IMAGE=$IMG\nHOSTNAME=$HOSTNAME\nDHCP=$DHCP\nIPV4=${IPV4--}\nV4MASK=${MASK4--}\nV4GW=${GW4--}\nIPV6=${IPV6--}\nV6MASK=${MASK6--}\nV6GW=${GW6--}\n"
+#echo -e "IMAGE=$IMG\nHOSTNAME=$HOSTNAME\nDHCP=$DHCP\nIPV4=${IPV4--}\nV4MASK=${MASK4--}\nV4GW=${GW4--}\nIPV6=${IPV6--}\nV6MASK=${MASK6--}\nV6GW=${GW6--}\n"
 
 [ -e "$IMG" ] && { echo "ERROR: $IMG exists"; exit 1; }
 
