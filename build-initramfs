@@ -26,7 +26,7 @@ rootfs="$OUTDIR"/rootfs
 if [[ -r ${CONFIG}/pw.root ]]; then
     PW_ROOT="$(cat "${CONFIG}/pw.root")"
 else
-    read -rs -p "pw.root: " PW_ROOT
+    read -rs -p "Root password to set in image: " PW_ROOT
     echo
 fi
 
