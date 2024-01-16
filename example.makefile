@@ -99,7 +99,7 @@ boot-qemu: $(STBOOT) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA) wwworkaroun
 VM_RAM ?= 4096
 ### For testing
 VM_PERSIST ?= --transient
-VM_NETWORK ?= user,hostfwd=tcp::4722-:4722
+VM_NETWORK ?= user
 ### For real use
 #VM_PERSIST ?= --autostart
 #VM_NETWORK ?= bridge=br0
