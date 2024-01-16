@@ -26,7 +26,7 @@ rootfs="$OUTDIR"/rootfs
 if [[ -r ${CONFIG}/pw.root ]]; then
     PW_ROOT="$(cat "${CONFIG}/pw.root")"
 else
-    read -rs -p "pw.troot: " PW_ROOT
+    read -rs -p "pw.root: " PW_ROOT
     echo
 fi
 
