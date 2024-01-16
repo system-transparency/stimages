@@ -29,7 +29,6 @@ install_dependencies() {
     git -C $GOPATH/src/$STBOOT_PKG_PATH fetch --quiet
     git -C $GOPATH/src/$STBOOT_PKG_PATH checkout --quiet $STBOOT_VERSION
 }    
-install_dependencies
 
 create_default_stboot_config() {
     HC="{
@@ -63,25 +62,52 @@ uroot_pkgs="
 	github.com/u-root/u-root/cmds/core/init
 	system-transparency.org/stboot"
 
+build_archive_untested() {
+    local out="$1"; shift
+
+    rm -rf "$OUTDIR/tmp-initramfs"
+    mkdir -p "$OUTDIR/tmp-initramfs"
+    for f in $@; do
+        from=$(echo "$f" | sed s/:.*//)
+        to=$(echo "$f" | sed s/.*://)
+        mkdir -p "$OUTDIR/tmp-initramfs/$(dirname "$to")"
+        ln -sr "$from" "$OUTDIR/tmp-initramfs/$to"
+    done
+    ln -sr "$GOPATH/bin/stboot" "$OUTDIR/tmp-initramfs/init"
+    (cd "$OUTDIR/tmp-initramfs" && find . | cpio -o -H newc -R 0:0 --dereference) > "${out}.tmp"
+    mv "${out}.tmp" "$out"
+    pigz -f "$out"
+}
+
+build_archive_using_uroot() {
+    env GO111MODULE=off $GOBIN/u-root \
+	-build=bb \
+	-uinitcmd="stboot -loglevel=d" \
+	-defaultsh="" \
+	-uroot-source $GOPATH/src/$UROOT_PKG_PATH \
+	-o ${IDIR}/stboot.cpio \
+	$uroot_files \
+	$uroot_pkgs
+    pigz -f ${IDIR}/stboot.cpio
+}
+
+create_iso() {
+    # stmgr refuses to overwrite target file
+    [[ -f "$OUTDIR"/stboot.iso ]] && mv "$OUTDIR"/stboot.iso "$OUTDIR"/stboot.iso.BAK
+
+    # NOTE: Simply using an arbitrary stimage kernel will most likely fail with "no modules found matching '/lib/modules/*.ko'"
+    $GOBIN/stmgr uki create \
+		 -format iso \
+		 -out "$OUT" \
+		 -kernel "contrib/stboot/linuxboot.vmlinuz" \
+		 -cmdline console=ttyS0,115200 \
+		 -initramfs ${IDIR}/stboot.cpio.gz
+}
+
+install_dependencies
 create_default_stboot_config
-
-env GO111MODULE=off $GOBIN/u-root \
-     -build=bb \
-     -uinitcmd="stboot -loglevel=d" \
-     -defaultsh="" \
-     -uroot-source $GOPATH/src/$UROOT_PKG_PATH \
-     -o ${IDIR}/stboot.cpio \
-     $uroot_files \
-     $uroot_pkgs
-pigz -f ${IDIR}/stboot.cpio
-
-[[ -f "$OUTDIR"/stboot.iso ]] && mv "$OUTDIR"/stboot.iso "$OUTDIR"/stboot.iso.BAK
-# NOTE: Simply using an arbitrary stimage kernel will most likely fail with "no modules found matching '/lib/modules/*.ko'"
-$GOBIN/stmgr uki create \
-      -format iso \
-      -out "$OUT" \
-      -kernel "contrib/stboot/linuxboot.vmlinuz" \
-      -cmdline console=ttyS0,115200 \
-      -initramfs ${IDIR}/stboot.cpio.gz
+#build_archive_untested "${IDIR}/stboot.cpio" $uroot_files
+build_archive_using_uroot
+create_iso
 
 # Emacs (-*- shell-mode -*-)
