@@ -67,7 +67,7 @@ chmod_image() {
 
 ensure_stmgr
 create_image
-sign_image
+sign_image $@
 chmod_image
 
 # Emacs (-*- shell-mode -*-)
