@@ -21,7 +21,7 @@ if [ "$1" = "-r" ]; then
 fi
 
 # Build image
-podman build -t "$IMAGE_NAME" -f "$CONTAINERFILE"
+podman build -q -t "$IMAGE_NAME" -f "$CONTAINERFILE"
 
 # Run image in new container with current directory mounted on /c
 podman run --rm --volume "${PWD}:/c${VOLUME_MOUNT_OPTS}" "$IMAGE_NAME" $@
