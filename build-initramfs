@@ -12,11 +12,13 @@ KERNEL_DEB= # Optional: Path to Debian package (.deb) with kernel to use
 DEBIAN_RELEASE=bookworm
 
 check_build_deps() {
-    return 1			# Fail => run in container
+    for cmd in $@; do
+	[ -z $(command -v "$cmd") ] && return 1
+    done
 }
 
-CONTAIN=			# Don't run in container
-check_build_deps || CONTAIN=./contain
+CONTAIN=			# Default: Don't run in container
+check_build_deps mmdebstrap || CONTAIN=./contain
 
 OUTDIR=$(dirname "$OUT")
 [ -d "$OUTDIR" ] || mkdir -p "$OUTDIR"
