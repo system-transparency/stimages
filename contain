@@ -1,6 +1,9 @@
 #! /bin/bash
 set -eu
 
+# Run a command in a container defined by $CONTAINERFILE.
+# If first argument is -r, refresh the image first.
+
 IMAGE_NAME=stimage
 CONTAINERFILE=debian12-slim.container
 VOLUME_MOUNT_OPTS=		# Use :z for SELinux relabeling
