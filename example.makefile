@@ -27,9 +27,10 @@ boot: boot-qemu
 clean:
 	-sudo rm -rf $(BUILD)/rootfs
 	-rm -rf $(BUILD)
+	@echo "NOTE: Leaving keys and guest dir ($(GUEST_DATADIR)). Try make distclean."
 distclean: clean
 	-rm -rf $(KEYS) $(CA) $(GUEST_DATADIR)
-	-([ -n "$$GOPATH" ] && [ -d "$$GOPATH" ] && echo "NOTE: Leaving GOPATH ($$GOPATH) as is")
+	-@([ -n "$$GOPATH" ] && [ -d "$$GOPATH" ] && echo "NOTE: Leaving GOPATH ($$GOPATH) as is")
 
 ####################
 $(BUILD)/stimage.zip: $(KERNEL) $(CMDLINE) $(INITRAMFS) $(KEYS)
