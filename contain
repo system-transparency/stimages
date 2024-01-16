@@ -11,7 +11,7 @@ refresh_deps() {
     CF="$1"
     while read -r _ img; do
 	podman pull "$img"
-    done < <(rg ^FROM "$CF")
+    done < <(grep ^FROM "$CF")
 }
 
 # Refresh images we depend upon

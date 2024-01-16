@@ -55,9 +55,9 @@ EOF
 	"$verbosity"
 	--architectures=amd64
 	--variant=minbase
-	--include=$(rg -v '^[[:space:]]*#|^[[:space:]]*$' ${PKGLIST_BASE} | tr '\n' ',')"
+	--include=$(grep -E -v '^[[:space:]]*#|^[[:space:]]*$' ${PKGLIST_BASE} | tr '\n' ',')"
     if [ -f ${CONFIG}/pkgs/${FLAVOUR}.pkglist ]; then
-	mmdebstrap_flags+=" --include=$(rg -v '^[[:space:]]*#|^[[:space:]]*$' ${CONFIG}/pkgs/${FLAVOUR}.pkglist | tr '\n' ',')"
+	mmdebstrap_flags+=" --include=$(grep -E -v '^[[:space:]]*#|^[[:space:]]*$' ${CONFIG}/pkgs/${FLAVOUR}.pkglist | tr '\n' ',')"
     fi
 
     echo "$0: running mmdebstrap, will take a minute or two"

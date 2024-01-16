@@ -67,8 +67,8 @@ if [ "$DHCP" = yes ]; then
     echo 'DHCP = yes' >> $f
 else
     if [[ -z "${IPV4-}" && -z "${IPV6-}" ]]; then
-	IPV4=$(drill -Q "$HOSTNAME" a    | rg ^[0-9]+ | head -1)
-	IPV6=$(drill -Q "$HOSTNAME" aaaa | rg ^[0-9]+ | head -1)
+	IPV4=$(drill -Q "$HOSTNAME" a    | grep -E ^[0-9]+ | head -1)
+	IPV6=$(drill -Q "$HOSTNAME" aaaa | grep -E ^[0-9]+ | head -1)
     fi
     [[ -n "${IPV4-}" && -z "${GW4-}" ]] && GW4=$(ipcalc --minaddr --no-decorate "${IPV4}/${MASK4}")
     [[ -n "${IPV6-}" && -z "${GW6-}" ]] && GW6=$(ipcalc --minaddr --no-decorate "${IPV6}/${MASK6}")1
