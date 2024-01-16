@@ -50,7 +50,7 @@ EOF
     ### Run mmdebstrap
     # TODO: use $APT_CACHER_NG for local proxy, add
     #     --aptopt='Acquire::http { Proxy "http://localhost:3142"; }' \
-    verbosity=			# empty, --silent or --verbose
+    verbosity=--silent		# empty, --silent or --verbose
     mmdebstrap_flags="
 	"$verbosity"
 	--architectures=amd64
