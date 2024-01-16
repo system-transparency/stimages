@@ -28,7 +28,7 @@ clean:
 	-sudo rm -rf $(BUILD)/rootfs
 	-rm -rf $(BUILD)
 distclean: clean
-	-rm -rf $(KEYS) $(CA)
+	-rm -rf $(KEYS) $(CA) $(GUEST_DATADIR)
 	-([ -n "$$GOPATH" ] && [ -d "$$GOPATH" ] && echo "Please clean up GOPATH ($$GOPATH)")
 
 ####################
