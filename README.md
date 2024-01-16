@@ -20,7 +20,8 @@ build/stimage.{json,zip}.
 
 You will need a go compiler and a long list of other tools installed
 to complete the build. If you're on a system without mmdebstrap,
-installing podman will be necessary.
+installing podman will be necessary. Building the initramfs and
+building the STDATA filesystem image currently require sudo.
 
 
 To boot your image, try running `make boot`.
