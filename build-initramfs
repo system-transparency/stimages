@@ -60,6 +60,7 @@ EOF
 	mmdebstrap_flags+=" --include=$(rg -v '^[[:space:]]*#|^[[:space:]]*$' ${CONFIG}/pkgs/${FLAVOUR}.pkglist | tr '\n' ',')"
     fi
 
+    echo "$0: running mmdebstrap, will take a minute or two"
     $CONTAIN mmdebstrap --mode sudo $mmdebstrap_flags $DEBIAN_RELEASE $rootfs $sources_list
     rm "$sources_list"
 }
