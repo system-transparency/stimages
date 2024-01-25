@@ -15,6 +15,7 @@ check_build_deps() {
     for cmd in $@; do
 	[ -z $(command -v "$cmd") ] && return 1
     done
+    return 0
 }
 
 CONTAIN=			# Default: Don't run in container
