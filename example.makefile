@@ -67,7 +67,7 @@ OVMF_CODE = $(OVMF_DIR)/OVMF_CODE.fd
 # For kernel booted with console=ttyS0,115200, use -nographic. Else use -display gtk.
 DISPLAY_MODE ?= -nographic
 
-# Unable to get -nic 'user,id=n0,guestfwd=tcp:10.0.2.2:8080-cmd:nc ...' to work, so:
+# Unable to get -nic 'user,guestfwd=tcp:10.0.2.2:8080-cmd:./serve-stimage.sh $(BUILD) $(STIMAGE_NAME)' to work with qemu-x86_64 version 7.2.7 (qemu-7.2.7-1.fc38)
 wwworkaround:
 	(for e in json zip; do \
 		nc -lc "echo -e 'HTTP/1.1 200 OK\n'; cat $(BUILD)/$(STIMAGE_NAME).$$e" 0.0.0.0 8080; \

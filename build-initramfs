@@ -81,13 +81,21 @@ copy_kernel() {
 	
 configure_rootfs() {
     ### Configure rootfs (TODO: use mmdebstrap hooks instead)
-    sudo cp -r --no-dereference --preserve=links,mode,timestamps "${CONFIG}"/overlays/${FLAVOUR}/* "$rootfs"/
-    sudo "$CONFIG"/scripts/setup.sh "$rootfs" "$CONFIG"
-    cp "$CONFIG"/scripts/setup-in-chroot.sh "$rootfs"/tmp/
-    sudo chroot $rootfs /tmp/setup-in-chroot.sh
-    rm "$rootfs"/tmp/setup-in-chroot.sh
-    sudo chroot $rootfs /bin/bash -c "echo \"root:${PW_ROOT}\" | chpasswd"
-    sudo "$CONFIG"/scripts/cleanup.sh "$rootfs"
+    if [ -d "${CONFIG}"/overlays/"${FLAVOUR}" ]; then
+	sudo cp -r --no-dereference --preserve=links,mode,timestamps "${CONFIG}"/overlays/"${FLAVOUR}"/* "$rootfs"/
+    fi
+    if [ -x "$CONFIG"/scripts/setup.sh ]; then
+	sudo "$CONFIG"/scripts/setup.sh "$rootfs" "$CONFIG"
+    fi
+    if [ -x "$CONFIG"/scripts/setup-in-chroot.sh ]; then
+	cp "$CONFIG"/scripts/setup-in-chroot.sh "$rootfs"/tmp/
+	sudo chroot $rootfs /tmp/setup-in-chroot.sh
+	rm "$rootfs"/tmp/setup-in-chroot.sh
+    fi
+    sudo chroot "$rootfs" /bin/bash -c "echo \"root:${PW_ROOT}\" | chpasswd"
+    if [ -x "$CONFIG"/scripts/cleanup.sh ]; then
+	sudo "$CONFIG"/scripts/cleanup.sh "$rootfs"
+    fi
 }
 
 create_cpio_archive() {
