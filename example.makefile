@@ -33,7 +33,7 @@ distclean: clean
 	-@([ -n "$$GOPATH" ] && [ -d "$$GOPATH" ] && echo "NOTE: Leaving GOPATH ($$GOPATH) as is")
 
 ####################
-$(BUILD)/stimage.zip: $(KERNEL) $(CMDLINE) $(INITRAMFS) $(KEYS)
+$(BUILD)/$(STIMAGE_NAME).zip: $(KERNEL) $(CMDLINE) $(INITRAMFS) $(KEYS)
 	./build-stimage $@ $(NETBOOT_URL) $^
 
 $(BUILD)/vmlinuz: $(BUILD)/debian-bookworm.cpio.gz
