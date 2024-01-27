@@ -103,7 +103,6 @@ create_cpio_archive() {
     ### Create cpio archive
     # TODO: prepend cpio archive with /kernel/x86/microcode/GenuineIntel.bin containing /lib/firmware/intel-ucode/* to $OUT, for targeting real hw
     # NOTE: If mmdebstrap was run in a container, cpio needs to be run in a container because file ownership.
-    # BUG: the redirect to /c/$OUT works only in container
     cat >"$OUTDIR"/mkcpio.sh <<EOF
 set -eu
 (cd $rootfs && find . | LC_ALL=C sort | cpio --quiet -o -H newc | pigz) > "$OUT"
