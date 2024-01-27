@@ -6,6 +6,11 @@ in a virtual machine using qemu and KVM.
 
 OS images are also known as OS packages or ospkg's.
 
+WARNING: The way you as a user interact with these tools **will** change!
+See the [interface][#Interface] section below for details.
+
+NOTE: This repository is only able to build Debian images.
+
 ## System Transparency overview
 
 In [System Transparency][], the boot loader [stboot][] loads a signed
@@ -59,3 +64,24 @@ you're unsure about how to deal with this.
 ## Configuring your own image
 
 TODO: add instructions on how to configure an image
+
+## Interface
+
+The way users interact with the tools in this repository **will**
+change. Both in the short perspective when we find out that we need
+more functionality which isn't easily added while keeping the
+interface compatible. But also in the longer perspective when we start
+using mkosi for building OS images.
+
+[mkosi][] will be helpful by wrapping distro specific tools like
+mmdebstrap, dnf --installroot and pacman and allow support for all
+Linux distributions that mkosi knows about.
+
+The reason for publishing this repository before it has a stable
+interface is to give a hint of how OS images can be built while
+waiting. For an example of how we build OS images for both test and
+production use, see
+https://git.glasklar.is/glasklar/infra/qa/qa-images and
+https://git.glasklar.is/glasklar/infra/images.
+
+[mkosi]: https://github.com/systemd/mkosi
