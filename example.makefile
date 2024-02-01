@@ -10,13 +10,16 @@ FLAVOUR ?= vanilla
 # Name of the ST image to build
 STIMAGE_NAME ?= stimage
 
+# Basename of the kernel, kernel cmdline and initramfs files
+BINDIST ?= debian-bookworm-amd64
+
 # URL to download image from
 NETBOOT_URL ?= http://10.0.2.2:8080/stimage.zip
 
 ####################
-KERNEL = $(BUILD)/vmlinuz
-CMDLINE = $(BUILD)/kcmdline
-INITRAMFS = $(BUILD)/debian-bookworm.cpio.gz
+KERNEL = $(BUILD)/$(BINDIST).vmlinuz
+CMDLINE = $(BUILD)/$(BINDIST).kcmdline
+INITRAMFS = $(BUILD)/$(BINDIST).cpio.gz
 CA = keys/rootcert.pem keys/rootkey.pem
 KEYS = keys/cert.pem keys/key.pem
 STBOOT = $(BUILD)/stboot.iso
@@ -36,16 +39,17 @@ distclean: clean
 $(BUILD)/$(STIMAGE_NAME).zip: $(KERNEL) $(CMDLINE) $(INITRAMFS) $(KEYS)
 	./build-stimage $@ $(NETBOOT_URL) $^
 
-$(BUILD)/vmlinuz: $(BUILD)/debian-bookworm.cpio.gz
+# NOTE: Kernel is copied from initramfs (kernel modules are not)
+$(KERNEL): $(INITRAMFS)
 	./build-kernel $(CONFIG) $(FLAVOUR) $@
 
-$(BUILD)/kcmdline:
+$(CMDLINE):
 	./build-kcmdline $(CONFIG) $(FLAVOUR) $@
 
-$(BUILD)/debian-bookworm.cpio.gz: $(CONFIG)/pkgs/000base.pkglist
+$(INITRAMFS): $(CONFIG)/pkgs/000base.pkglist
 	./build-initramfs $(CONFIG) $(FLAVOUR) $@ $^
 
-$(BUILD)/stboot.iso: keys/rootcert.pem
+$(STBOOT): keys/rootcert.pem
 	./contrib/stboot/build-stboot $(STIMAGE_NAME) $@ $^
 
 ####################

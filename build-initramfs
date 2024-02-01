@@ -76,7 +76,9 @@ copy_kernel() {
 	exit 1
     else
 	cp -v "$rootfs/boot/vmlinuz-"* "$OUTDIR"/
-	ln -sf "$(cd "${OUTDIR}" && ls vmlinuz-* | tail -1)" "$OUTDIR"/vmlinuz
+	src="$(cd "${OUTDIR}" && ls vmlinuz-* | tail -1)"
+	tgt="$(basename "$OUT" .cpio.gz)".vmlinuz
+	ln -sfv "${src}" "${OUTDIR}/${tgt}"
     fi
 }
 	
