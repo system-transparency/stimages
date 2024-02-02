@@ -10,18 +10,18 @@ echo "disable ssh.socket" >> /lib/systemd/system-preset/90-systemd.preset
 # default nftables rules
 cat > /etc/nftables.conf << 'EOF'
 #!/usr/sbin/nft -f
-
 flush ruleset
-
 table inet filter {
 	chain input {
 		type filter hook input priority 0; policy drop;
 		ct state invalid drop; ct state related,established accept;
+
 		iifname lo accept
 		ip protocol icmp limit rate 4/second accept
-	        ip6 nexthdr icmpv6 icmpv6 type { echo-request, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert } limit rate 4/second accept
+	        icmpv6 type { echo-request, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert } limit rate 4/second accept
 
-		tcp dport 4722 accept
+		tcp dport 22 accept comment "Incoming SSH"
+
                 counter #log prefix "Default drop INPUT: " level info
 	}
 	chain forward {
