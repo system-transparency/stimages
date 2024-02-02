@@ -14,7 +14,7 @@ STIMAGE_NAME ?= stimage
 BINDIST ?= debian-bookworm-amd64
 
 # URL to download image from
-NETBOOT_URL ?= http://10.0.2.2:8080/stimage.zip
+NETBOOT_URL ?= http://10.0.2.2:8080/$(STIMAGE_NAME).zip
 
 ####################
 KERNEL = $(BUILD)/$(BINDIST).vmlinuz
