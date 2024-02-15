@@ -9,5 +9,3 @@ OUT="$1"; shift
 # process has moved/copied a kernel to $OUT.
 
 [ -f "$OUT" ] || { echo "$0: missing $OUT"; exit 1; }
-
-# Emacs (-*- shell-mode -*-)

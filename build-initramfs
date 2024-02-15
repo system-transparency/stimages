@@ -118,5 +118,3 @@ EOF
 copy_kernel
 configure_rootfs
 create_cpio_archive
-
-# Emacs (-*- shell-mode -*-)
