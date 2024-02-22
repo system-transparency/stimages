@@ -16,4 +16,3 @@ make-default:
   artifacts:
     paths:
       - build/stimage.*
-      - build/debian-bookworm-amd64.*
