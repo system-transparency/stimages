@@ -57,7 +57,8 @@ keys/rootcert.pem keys/rootkey.pem:
 	(umask 0077 && mkdir -p keys)
 	(cd keys && stmgr keygen certificate --isCA)
 
-keys/cert.pem keys/key.pem: $(CA)
+keys/cert.pem keys/key.pem:
+	$(MAKE) keys/rootcert.pem
 	(cd keys && stmgr keygen certificate --rootCert rootcert.pem --rootKey rootkey.pem)
 
 ####################
