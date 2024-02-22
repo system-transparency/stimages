@@ -11,6 +11,7 @@ make-default:
     - export GOPATH="${PWD}"/.go
     - go install system-transparency.org/stmgr@latest
   script:
+    - echo stimages > config/example/pw.root
     - make
   artifacts:
     paths:
