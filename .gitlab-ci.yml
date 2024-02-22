@@ -5,6 +5,7 @@ make-default:
   stage: build
   image: debian:bookworm-slim
   before_script:
+    - apt-get update -qq
     - apt-get install -qqy curl git golang-1.19-go pigz sudo make mmdebstrap cpio
     - export GOPATH="${PWD}"/.go
     - go install system-transparency.org/stmgr@latest
