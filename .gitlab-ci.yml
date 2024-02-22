@@ -1,0 +1,15 @@
+stages:
+  - build
+
+make-default:
+  stage: build
+  image: debian-bookworm-slim
+  before_script:
+    - apt update
+    - apt install -qqy curl git golang-1.19-go pigz sudo make mmdebstrap cpio
+  script:
+    - make
+  artifacts:
+    paths:
+      - build/stimage.*
+      - build/debian-bookworm-amd64.*
