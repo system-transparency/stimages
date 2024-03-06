@@ -55,7 +55,7 @@ create_default_stboot_config() {
 
 uroot_files="
 	-files ${ROOTCERT}:etc/trust_policy/ospkg_signing_root.pem
-	-files contrib/stboot/isrgrootx1.pem:etc/ssl/certs/isrgrootx1.pem
+	-files contrib/stboot/isrgrootx1.pem:etc/trust_policy/tls_roots.pem
 	-files ${IDIR}/host_config.json:etc/host_configuration.json
 	-files ${IDIR}/trust_policy.json:etc/trust_policy/trust_policy.json"
 uroot_pkgs="
