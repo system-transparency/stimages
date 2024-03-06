@@ -1,0 +1,10 @@
+# ~/.config/systemd/user/stsigner.service
+
+[Unit]
+Description=ST signer daemon
+
+[Service]
+ExecStart=/usr/bin/stsignd
+
+[Install]
+WantedBy=default.target

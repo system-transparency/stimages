@@ -1,0 +1,4 @@
+# stsignd configuration file (-*- shell-script -*-)
+
+sleep_between_runs=5m
+download_url_template=https://git.glasklar.is/api/v4/projects/$proj/jobs/artifacts/main/download?job=$job

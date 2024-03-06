@@ -1,0 +1,110 @@
+#! /bin/bash
+#
+# Daemon signing ST OS images downloaded from GitLab CI/CD and upload
+# them to an image server.
+#
+# Configuration is read from ~/.config/stsignd/config and ~/.config/stsignd/jobs/*.{conf,keys}
+#
+
+set -eu
+
+# TODO: Don't bother with signing and uploading if the image is already uploaded.
+
+download() {
+    local url="$1"; shift
+    local out="$1"; shift
+    local res
+
+    res="$(curl -s -w '%{http_code}' -o "$out" "$url")"
+    if [[ "$res" != 200 ]]; then
+	return 99
+    fi
+}
+
+sign() {
+    local path="$1"; shift
+    local a=("$@")
+    local cert key k
+
+    for k in "${!a[@]}"; do
+	if [[ $((k % 2)) -eq 0 ]]; then
+	    eval cert="${a[$k]}"
+	elif [ -n "${a[$k]}" ]; then
+	    eval key="${a[$k]}"
+	    stmgr ospkg sign --cert "$cert" --key "$key" --ospkg "$path"
+	    unset cert key
+	fi
+    done
+    if [ -n "${cert-}" ]; then
+	echo "skipping cert without key: $cert"
+    fi
+}
+
+upload() {
+    local path="$1"; shift
+    local name; name="$(basename "$path")"
+
+    echo "$name" | cat - "$path" | ssh "$host"
+}
+
+sign_and_upload() {
+    local path="$1"; shift
+    local host="$1"; shift
+    local keys=("$@")
+
+    local dir; dir="$(dirname "$path")"
+    local fn; fn="$(basename "$path")"
+    local cwd; cwd="$(pwd)"
+    cd "$dir"
+    unzip -qq "$fn"
+    rm "$fn"
+    mv stimages/build/*.{json,zip} .
+    rm -rf stimages
+
+    local zip
+    for zip in *.zip; do
+	fn="$(basename "$zip" .zip)"
+	[ -f "$fn".json ] || continue # Skip if no .json
+	sign "$fn".zip "${keys[@]}"
+	upload "$fn".zip
+	upload "$fn".json
+    done
+
+    cd "$cwd"
+}
+
+main() {
+    local dir
+    trap 'rm -rf "$dir"' EXIT
+
+    while true; do
+	if [[ -f ~/.config/stsignd/config && -d ~/.config/stsignd/jobs ]]; then
+	    for jobconf in ~/.config/stsignd/jobs/*.conf; do
+		[ -n "${dir-}" ] && rm -rf "$dir"
+		local job; job="$(basename "$jobconf" .conf)"
+
+		local ulspec proj
+		read -r ulspec proj < "$jobconf"
+
+		local keys=()
+		while read -r cert key; do
+		    keys+=("$cert" "$key")
+		done < ~/.config/stsignd/jobs/"$job".keys
+
+		dir="$(mktemp -d /tmp/stsignd-XXXXXXXXXX)"
+
+		# shellcheck source=/dev/null
+		source ~/.config/stsignd/config # Substituting $proj and $job
+		download "$download_url_template" "$dir"/dl.zip
+		if [[ $? -eq 99 ]]; then
+		    continue
+		fi
+
+		sign_and_upload "$dir"/dl.zip "$ulspec" "${keys[@]}"
+	    done
+	fi
+	sleep ${sleep_between_runs-5m}
+    done
+}
+
+main
