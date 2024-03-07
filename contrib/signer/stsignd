@@ -4,21 +4,32 @@
 # them to an image server.
 #
 # Configuration is read from ~/.config/stsignd/config and ~/.config/stsignd/jobs/*.{conf,keys}
+# State is written to files in ~/.local/state/stsignd/.
 #
 
 set -eu
 
-# TODO: Don't bother with signing and uploading if the image is already uploaded.
-
+# Download URL if the HTTP server reports it's newer than what LASTMOD_FILE says.
+# Store downloaded file in FILE_OUT.
+# Update LASTMOD_FILE if file is downloaded.
+# "Return" http response code on stdout.
 download() {
     local url="$1"; shift
-    local out="$1"; shift
-    local res
+    local file_out="$1"; shift
+    local lastmod_file="$1"; shift
 
-    res="$(curl -s -w '%{http_code}' -o "$out" "$url")"
-    if [[ "$res" != 200 ]]; then
-	return 99
+    local lastmod=
+    if [ -f "$lastmod_file" ]; then
+       lastmod=$(<lastmod_file)
     fi
+    local response_code new_lastmod
+    read -r response_code new_lastmod \
+	 <<< "$(curl --silent \
+	 	 --time-cond "$lastmod" \
+	 	 --write-out '%{response_code} %header{last-modified}' \
+		 --output "$file_out" "$url")"
+    [ "$response_code" != 200 ] || echo "$new_lastmod" > "$lastmod_file"
+    echo "$response_code"
 }
 
 sign() {
@@ -74,19 +85,19 @@ sign_and_upload() {
 }
 
 main() {
-    local dir
     trap 'rm -rf "$dir"' EXIT
+    mkdir -p ~/.local/state/stsignd
 
     while true; do
 	if [[ -f ~/.config/stsignd/config && -d ~/.config/stsignd/jobs ]]; then
 	    for jobconf in ~/.config/stsignd/jobs/*.conf; do
 		[ -n "${dir-}" ] && rm -rf "$dir"
-		local job; job="$(basename "$jobconf" .conf)"
+		job="$(basename "$jobconf" .conf)"
 
-		local ulspec proj
-		read -r ulspec proj < "$jobconf"
+		# shellcheck disable=SC2034
+		read -r ulspec proj < "$jobconf" # $proj is used below when sourcing the config
 
-		local keys=()
+		keys=()
 		while read -r cert key; do
 		    keys+=("$cert" "$key")
 		done < ~/.config/stsignd/jobs/"$job".keys
@@ -95,15 +106,13 @@ main() {
 
 		# shellcheck source=/dev/null
 		source ~/.config/stsignd/config # Substituting $proj and $job
-		download "$download_url_template" "$dir"/dl.zip
-		if [[ $? -eq 99 ]]; then
-		    continue
-		fi
+		res="$(download "${download_url_template-localhost}" "$dir"/dl.zip ~/.local/state/stsignd/"$job".lastmod)"
+		[ "$res" = 200 ] || continue
 
 		sign_and_upload "$dir"/dl.zip "$ulspec" "${keys[@]}"
 	    done
 	fi
-	sleep ${sleep_between_runs-5m}
+	sleep "${sleep_between_runs-5m}"
     done
 }
 
