@@ -110,6 +110,8 @@ boot-qemu: $(STBOOT) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA) wwworkaroun
 		-drive file="$(STBOOT)",format=raw,if=none,media=cdrom,id=drive-cd1,readonly=on \
 		-device ahci,id=ahci0 -device ide-cd,bus=ahci0.0,drive=drive-cd1,id=cd1,bootindex=1
 
+.PHONY: wwworkaround boot-qemu
+
 ## Experimental VM creation using libvirt
 VM_RAM ?= 4096
 ### For testing
@@ -137,6 +139,7 @@ install-vm: $(STBOOT) $(OVMF_CODE) $(GUEST_STDATA) wwworkaround
 		--disk "$(STBOOT)",format=raw,readonly=on \
 		--disk "$(GUEST_STDATA)",format=raw
 
+.PHONY: install-vm
 ####################
 
 # You don't need all of these installed for anything, but if you have
