@@ -16,7 +16,11 @@ BINDIST ?= debian-bookworm-amd64
 # URL to download image from
 NETBOOT_URL ?= http://10.0.2.2:8080/$(STIMAGE_NAME).zip
 
+# Cert/key file pairs to sign the image with. Set to empty string to disable signing.
+SIGN ?= $(KEYS)
+
 ####################
+STIMAGE = $(BUILD)/$(STIMAGE_NAME).zip
 KERNEL = $(BUILD)/$(BINDIST).vmlinuz
 CMDLINE = $(BUILD)/$(BINDIST).kcmdline
 INITRAMFS = $(BUILD)/$(BINDIST).cpio.gz
@@ -25,7 +29,11 @@ KEYS = keys/cert.pem keys/key.pem
 STBOOT = $(BUILD)/stboot.iso
 
 ####################
-all: $(BUILD)/$(STIMAGE_NAME).zip
+all: stimage
+stimage: $(STIMAGE)
+kernel: $(KERNEL)
+cmdline: $(CMDLINE)
+initramfs: $(INITRAMFS)
 boot: boot-qemu
 clean:
 	-sudo rm -rf $(BUILD)/rootfs
@@ -35,8 +43,9 @@ distclean: clean
 	-rm -rf $(KEYS) $(CA) $(GUEST_DATADIR)
 	-@([ -n "$$GOPATH" ] && [ -d "$$GOPATH" ] && echo "NOTE: Leaving GOPATH ($$GOPATH) as is")
 
+.PHONY: all stimage kernel cmdline initramfs boot clean distclean
 ####################
-$(BUILD)/$(STIMAGE_NAME).zip: $(KERNEL) $(CMDLINE) $(INITRAMFS) $(KEYS)
+$(STIMAGE): $(KERNEL) $(CMDLINE) $(INITRAMFS) $(SIGN)
 	./build-stimage $@ $(NETBOOT_URL) $^
 
 # NOTE: Kernel is copied from initramfs (kernel modules are not)
@@ -101,6 +110,8 @@ boot-qemu: $(STBOOT) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA) wwworkaroun
 		-drive file="$(STBOOT)",format=raw,if=none,media=cdrom,id=drive-cd1,readonly=on \
 		-device ahci,id=ahci0 -device ide-cd,bus=ahci0.0,drive=drive-cd1,id=cd1,bootindex=1
 
+.PHONY: wwworkaround boot-qemu
+
 ## Experimental VM creation using libvirt
 VM_RAM ?= 4096
 ### For testing
@@ -128,6 +139,7 @@ install-vm: $(STBOOT) $(OVMF_CODE) $(GUEST_STDATA) wwworkaround
 		--disk "$(STBOOT)",format=raw,readonly=on \
 		--disk "$(GUEST_STDATA)",format=raw
 
+.PHONY: install-vm
 ####################
 
 # You don't need all of these installed for anything, but if you have
