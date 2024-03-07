@@ -6,7 +6,8 @@
 # Configuration is read from ~/.config/stsignd/config and ~/.config/stsignd/jobs/*.{conf,keys}
 # State is written to files in ~/.local/state/stsignd/.
 #
-
+# NOTE: Uploads are not atomic (.zip before .json) so there's a window where stboot will fail validation
+#
 set -eu
 
 # Download URL if the HTTP server reports it's newer than what LASTMOD_FILE says.
