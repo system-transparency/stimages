@@ -16,7 +16,11 @@ BINDIST ?= debian-bookworm-amd64
 # URL to download image from
 NETBOOT_URL ?= http://10.0.2.2:8080/$(STIMAGE_NAME).zip
 
+# Cert/key file pairs to sign the image with. Set to empty string to disable signing.
+SIGN ?= $(KEYS)
+
 ####################
+STIMAGE = $(BUILD)/$(STIMAGE_NAME).zip
 KERNEL = $(BUILD)/$(BINDIST).vmlinuz
 CMDLINE = $(BUILD)/$(BINDIST).kcmdline
 INITRAMFS = $(BUILD)/$(BINDIST).cpio.gz
@@ -36,7 +40,7 @@ distclean: clean
 	-@([ -n "$$GOPATH" ] && [ -d "$$GOPATH" ] && echo "NOTE: Leaving GOPATH ($$GOPATH) as is")
 
 ####################
-$(BUILD)/$(STIMAGE_NAME).zip: $(KERNEL) $(CMDLINE) $(INITRAMFS) $(KEYS)
+$(STIMAGE): $(KERNEL) $(CMDLINE) $(INITRAMFS) $(SIGN)
 	./build-stimage $@ $(NETBOOT_URL) $^
 
 # NOTE: Kernel is copied from initramfs (kernel modules are not)
