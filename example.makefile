@@ -29,7 +29,11 @@ KEYS = keys/cert.pem keys/key.pem
 STBOOT = $(BUILD)/stboot.iso
 
 ####################
-all: $(BUILD)/$(STIMAGE_NAME).zip
+all: stimage
+stimage: $(STIMAGE)
+kernel: $(KERNEL)
+cmdline: $(CMDLINE)
+initramfs: $(INITRAMFS)
 boot: boot-qemu
 clean:
 	-sudo rm -rf $(BUILD)/rootfs
@@ -39,6 +43,7 @@ distclean: clean
 	-rm -rf $(KEYS) $(CA) $(GUEST_DATADIR)
 	-@([ -n "$$GOPATH" ] && [ -d "$$GOPATH" ] && echo "NOTE: Leaving GOPATH ($$GOPATH) as is")
 
+.PHONY: all stimage kernel cmdline initramfs boot clean distclean
 ####################
 $(STIMAGE): $(KERNEL) $(CMDLINE) $(INITRAMFS) $(SIGN)
 	./build-stimage $@ $(NETBOOT_URL) $^
