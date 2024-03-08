@@ -22,13 +22,14 @@ else
 EOF
 fi
 
-if [ -r /stdata/etc/fstab.local ]; then
-    cat /stdata/etc/fstab.local >> /etc/fstab
-    mount -a
-fi
-
-if [ -r /stdata/etc/nftables.conf ]; then
-    cp -p /stdata/etc/nftables.conf /etc/
+if [ -r /stdata/etc/mounts ]; then
+    while read -r device mountpoint fstype; do
+	# Mountpoint must be a directory and contain a single regular file named README.
+	[ -d "$mountpoint" ] || continue
+	[ "$(find "$mountpoint" \! -wholename "$mountpoint" \! -wholename "$mountpoint"/README | wc -c)" -eq 0 ] || continue
+	[ -f "$mountpoint"/README ] || continue
+	mount -t "$fstype" -o nosuid,nodev,noexec "$device" "$mountpoint"
+    done < /stdata/etc/mounts
 fi
 
 if [ -r /stdata/etc/ssh/ssh_host_ed25519_key ]; then
