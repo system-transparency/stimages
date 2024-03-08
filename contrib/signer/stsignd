@@ -10,27 +10,49 @@
 #
 set -eu
 
-# Download URL if the HTTP server reports it's newer than what LASTMOD_FILE says.
+STATE_DIR=~/.local/state/stsignd
+
+# Download URL if we think the file is newer than what we've seen before.
 # Store downloaded file in FILE_OUT.
-# Update LASTMOD_FILE if file is downloaded.
-# "Return" http response code on stdout.
+# Return 0 if the file was downloaded.
+# Return 1 if the file was not downloaded.
 download() {
     local url="$1"; shift
     local file_out="$1"; shift
-    local lastmod_file="$1"; shift
+    local id="$1"; shift
 
-    local lastmod=
-    if [ -f "$lastmod_file" ]; then
-       lastmod=$(<lastmod_file)
+    # Unfortunately GitLab/nginx doesn't update the last-modified
+    # header as expected so instead of curl --time-cond we compare
+    # both last-modified and content-length from a HEAD call. If any
+    # of them has changed, we download the file.
+
+    local -i response_code length new_length
+    local lastmod new_lastmod
+    local statefile="${STATE_DIR}/${id}"
+    [[ -f "$statefile" ]] || touch "$statefile"
+    read -r length lastmod <<< "$(<"$statefile")"
+
+    read -r response_code new_length new_lastmod <<< \
+	 "$(curl --silent --location \
+	 	 --write-out '%{response_code} %header{content-length} %header{last-modified}' \
+	 	 --head \
+		 --output /dev/null \
+		 "$url")"
+    if [[ $response_code -eq 200 &&
+	      $new_length -ne $length ||
+		  "$new_lastmod" != "$lastmod" ]]; then
+	read -r response_code new_length new_lastmod <<< \
+	     "$(curl --silent --location \
+	 	 --write-out '%{response_code} %header{content-length} %header{last-modified}' \
+		 --output "$file_out" \
+		 "$url")"
+	if [[ $response_code -eq 200 ]]; then
+	    echo "$new_length $new_lastmod" > "$statefile"
+	    return 0
+	fi
     fi
-    local response_code new_lastmod
-    read -r response_code new_lastmod \
-	 <<< "$(curl --silent \
-	 	 --time-cond "$lastmod" \
-	 	 --write-out '%{response_code} %header{last-modified}' \
-		 --output "$file_out" "$url")"
-    [ "$response_code" != 200 ] || echo "$new_lastmod" > "$lastmod_file"
-    echo "$response_code"
+
+    return 1
 }
 
 sign() {
@@ -107,8 +129,7 @@ main() {
 
 		# shellcheck source=/dev/null
 		source ~/.config/stsignd/config # Substituting $proj and $job
-		res="$(download "${download_url_template-localhost}" "$dir"/dl.zip ~/.local/state/stsignd/"$job".lastmod)"
-		[ "$res" = 200 ] || continue
+		download "${download_url_template-localhost}" "${dir}"/dl.zip "${job}" || continue
 
 		sign_and_upload "$dir"/dl.zip "$ulspec" "${keys[@]}"
 	    done
