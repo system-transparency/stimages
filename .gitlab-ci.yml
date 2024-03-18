@@ -32,5 +32,6 @@ boot example image:
   script:
     - test/boot.sh
   artifacts:
+    when: always
     paths:
       - qemu.log
