@@ -28,7 +28,7 @@ boot example image:
   image: debian:bookworm
   before_script:
     - apt-get -qq update
-    - apt-get install -qqy ncat qemu-system-x86
+    - apt-get install -qqy make ncat qemu-system-x86
   script:
     - test/boot.sh
   artifacts:
