@@ -2,7 +2,7 @@
 set -eu
 
 make boot >qemu.log 2>&1 &
-for delay in 20 20 20 20 20 40 40 40 40 40 100 100 100; do
+for delay in 20 2 2 2 2 2 30; do # 1 minute in total
     sleep "${delay}"
     tail qemu.log | grep -q '^example-host login: ' || continue
     exit 0
