@@ -34,6 +34,7 @@ stimage: $(STIMAGE)
 kernel: $(KERNEL)
 cmdline: $(CMDLINE)
 initramfs: $(INITRAMFS)
+stboot: $(STBOOT)
 boot: boot-qemu
 clean:
 	-sudo rm -rf $(BUILD)/rootfs
