@@ -2,16 +2,16 @@ variables:
   STMGR_VERSION: latest
 
 stages:
-  - build
-  - boot
+  - buildnboot
 
 build example image:
-  stage: build
+  stage: buildnboot
   image: debian:bookworm
   before_script:
     - apt-get -qq update
     - apt-get install -qqy curl git golang-1.19-go pigz
     - apt-get install -qqy sudo make mmdebstrap cpio
+    - apt-get install -qqy ncat qemu-system-x86
     - |
       export GOPATH="${PWD}"/.go
       export PATH="${PATH}":/usr/lib/go-1.19/bin:"${GOPATH}"/bin
@@ -19,19 +19,9 @@ build example image:
   script:
     - echo stimages > config/example/pw.root
     - make stimage
-  artifacts:
-    paths:
-      - build/stimage.*
-
-boot example image:
-  stage: boot
-  image: debian:bookworm
-  before_script:
-    - apt-get -qq update
-    - apt-get install -qqy make ncat qemu-system-x86
-  script:
     - test/boot.sh
   artifacts:
     when: always
     paths:
+      - build/stimage.*
       - qemu.log
