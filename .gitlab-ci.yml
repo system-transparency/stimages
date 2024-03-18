@@ -32,3 +32,6 @@ boot-example:
     - apt-get install -qqy ncat qemu-system-x86
   script:
     - test/boot.sh
+  artifacts:
+    paths:
+      - qemu.log
