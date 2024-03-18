@@ -22,7 +22,6 @@ build example image:
   artifacts:
     paths:
       - build/stimage.*
-      - build/stboot.iso
 
 boot example image:
   stage: boot
