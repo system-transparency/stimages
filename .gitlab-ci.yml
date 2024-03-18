@@ -1,3 +1,6 @@
+variables:
+  STMGR_VERSION: latest
+
 stages:
   - build
   - boot
