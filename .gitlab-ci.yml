@@ -14,7 +14,12 @@ build-example:
       export PATH="${PATH}":/usr/lib/go-1.19/bin:"${GOPATH}"/bin
       go install system-transparency.org/stmgr@"${STMGR_VERSION}"
   script:
+    - echo stimages > config/example/pw.root
     - make stimage
+  artifacts:
+    paths:
+      - build/stimage.*
+      - build/stboot.iso
 
 boot-example:
   stage: boot
