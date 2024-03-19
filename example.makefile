@@ -75,12 +75,18 @@ keys/cert.pem keys/key.pem:
 QEMU_RAM ?= 4G
 GUEST_DATADIR ?= hosts
 GUEST_NAME ?= example-host
-GUEST_STDATA ?= $(GUEST_DATADIR)/$(GUEST_NAME)/stdata.img
 GUEST_OVMF_VARS ?= $(GUEST_DATADIR)/$(GUEST_NAME)/OVMF_VARS.fd
 OVMF_DIR = /usr/share/OVMF
 OVMF_CODE = $(OVMF_DIR)/OVMF_CODE.fd
 # For kernel booted with console=ttyS0,115200, use -nographic. Else use -display gtk.
 DISPLAY_MODE ?= -nographic
+
+ifdef DO_USE_STDATA
+GUEST_STDATA ?= $(GUEST_DATADIR)/$(GUEST_NAME)/stdata.img
+endif
+ifdef GUEST_STDATA
+QEMU_STDATA_DRIVE = -drive if=virtio,file=$(GUEST_STDATA),format=raw
+endif
 
 # Unable to get -nic 'user,guestfwd=tcp:10.0.2.2:8080-cmd:./serve-stimage.sh $(BUILD) $(STIMAGE_NAME)' to work with qemu-x86_64 version 7.2.7 (qemu-7.2.7-1.fc38)
 wwworkaround: $(STIMAGE)
@@ -106,8 +112,7 @@ boot-qemu: $(STBOOT) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA) wwworkaroun
 		-device virtio-rng-pci,rng=rng0 \
 		-rtc base=localtime \
 		-m $(QEMU_RAM) \
-		$(DISPLAY_MODE) \
-		-drive if=virtio,file=$(GUEST_STDATA),format=raw \
+		$(DISPLAY_MODE) $(QEMU_STDATA_DRIVE) \
 		-drive file="$(STBOOT)",format=raw,if=none,media=cdrom,id=drive-cd1,readonly=on \
 		-device ahci,id=ahci0 -device ide-cd,bus=ahci0.0,drive=drive-cd1,id=cd1,bootindex=1
 
