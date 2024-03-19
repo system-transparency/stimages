@@ -1,0 +1,10 @@
+# Coding style
+
+* Use shellcheck on shell scripts.
+
+
+# Tagging
+
+Example tagging v0.0.6:
+
+    $ export T=v0.0.6; git tag -sam $T $T && git push && git push --tags
