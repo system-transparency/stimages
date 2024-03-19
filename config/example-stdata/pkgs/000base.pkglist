@@ -16,6 +16,7 @@ locales
 man-db
 mailutils
 nftables
+openssh-server
 ripgrep
 sudo
 systemd

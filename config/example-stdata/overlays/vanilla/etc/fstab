@@ -1,0 +1,2 @@
+# The STDATA partition, used by the st-init* services
+PARTLABEL=STDATA /stdata ext4 ro,noexec
