@@ -1,0 +1,11 @@
+[Unit]
+Description=ST example service
+After=network.target
+
+[Service]
+Type=exec
+User=nobody
+ExecStart=/usr/sbin/st-example-service
+
+[Install]
+WantedBy=multi-user.target

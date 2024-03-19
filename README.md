@@ -63,7 +63,7 @@ you're unsure about how to deal with this.
 
 ## Configuring your own image
 
-TODO: add instructions on how to configure an image
+See config/example/README.md for an example of how to configure an OS image.
 
 ## Interface
 
@@ -81,7 +81,7 @@ The reason for publishing this repository before it has a stable
 interface is to give a hint of how OS images can be built while
 waiting. For an example of how we build OS images for both test and
 production use, see
-https://git.glasklar.is/glasklar/infra/qa/qa-images and
+https://git.glasklar.is/system-transparency/project/qa-images and
 https://git.glasklar.is/glasklar/infra/images.
 
 [mkosi]: https://github.com/systemd/mkosi

@@ -4,6 +4,9 @@ set -eu
 # default hostname
 echo "amnesiac-debian" > /etc/hostname
 
+# disable systemd socket activation for sshd
+echo "disable ssh.socket" >> /lib/systemd/system-preset/90-systemd.preset
+
 # default nftables rules
 cat > /etc/nftables.conf << 'EOF'
 #!/usr/sbin/nft -f
