@@ -9,25 +9,14 @@ OUT="$1"; shift
 ROOTCERT="$1"; shift
 
 GOBIN=$GOPATH/bin
-STBOOT_PKG_PATH=system-transparency.org/stboot
-STBOOT_VERSION=v0.2.2
-UROOT_PKG_PATH=github.com/u-root/u-root
-UROOT_VERSION=v0.10.0
+STBOOT_VERSION=v0.3.4
 OUTDIR="$(dirname "$OUT")"
 IDIR="$OUTDIR/stboot"		# Intermediate output directory
 mkdir -p "$IDIR"
 
 install_dependencies() {
     go install system-transparency.org/stmgr@latest
-
-    go install ${UROOT_PKG_PATH}@${UROOT_VERSION}
-    env GO111MODULE=off go get -d ${UROOT_PKG_PATH}/...
-    git -C $GOPATH/src/$UROOT_PKG_PATH fetch --quiet
-    git -C $GOPATH/src/$UROOT_PKG_PATH checkout --quiet $UROOT_VERSION
-
-    env GO111MODULE=off go get -d ${STBOOT_PKG_PATH}/...
-    git -C $GOPATH/src/$STBOOT_PKG_PATH fetch --quiet
-    git -C $GOPATH/src/$STBOOT_PKG_PATH checkout --quiet $STBOOT_VERSION
+    CGO_ENABLED=0 go install system-transparency.org/stboot@"${STBOOT_VERSION}"
 }    
 
 create_default_stboot_config() {
@@ -37,58 +26,45 @@ create_default_stboot_config() {
       \"gateway\": null,
       \"dns\": null,
       \"network_interfaces\": null,
-      \"ospkg_pointer\": \"http://10.0.2.2:8080/"${STIMAGE_NAME}".json\",
-      \"identity\": null,
-      \"authentication\": null,
+      \"ospkg_pointer\": \"http://10.0.2.2:8080/${STIMAGE_NAME}.json\",
       \"bonding_mode\": null,
       \"bond_name\": \"\"
     }"
-    $GOBIN/stmgr hostconfig check "$HC" > ${IDIR}/host_config.json
+    "$GOBIN"/stmgr hostconfig check "$HC" > "${IDIR}"/host_config.json
 
-    $GOBIN/stmgr trustpolicy check '
+    "$GOBIN"/stmgr trustpolicy check '
     {
       "ospkg_signature_threshold": 1,
       "ospkg_fetch_method": "network"
     }
-    ' > ${IDIR}/trust_policy.json
+    ' > "${IDIR}"/trust_policy.json
 }    
 
 uroot_files="
-	-files ${ROOTCERT}:etc/trust_policy/ospkg_signing_root.pem
-	-files contrib/stboot/isrgrootx1.pem:etc/ssl/certs/isrgrootx1.pem
-	-files ${IDIR}/host_config.json:etc/host_configuration.json
-	-files ${IDIR}/trust_policy.json:etc/trust_policy/trust_policy.json"
-uroot_pkgs="
-	github.com/u-root/u-root/cmds/core/init
-	system-transparency.org/stboot"
+	${ROOTCERT}:etc/trust_policy/ospkg_signing_root.pem
+	contrib/stboot/isrgrootx1.pem:etc/trust_policy/tls_roots.pem
+	${IDIR}/host_config.json:etc/host_configuration.json
+	${IDIR}/trust_policy.json:etc/trust_policy/trust_policy.json"
 
-build_archive_untested() {
+build_archive() {
     local out="$1"; shift
+    local idir; idir="$(dirname "$out")"
 
-    rm -rf "$OUTDIR/tmp-initramfs"
-    mkdir -p "$OUTDIR/tmp-initramfs"
-    for f in $@; do
-        from=$(echo "$f" | sed s/:.*//)
-        to=$(echo "$f" | sed s/.*://)
-        mkdir -p "$OUTDIR/tmp-initramfs/$(dirname "$to")"
-        ln -sr "$from" "$OUTDIR/tmp-initramfs/$to"
+    rm -rf "$idir/tmp-initramfs"
+    mkdir -p "$idir/tmp-initramfs"
+    for f in "$@"; do
+	(IFS=: read -r from to
+         mkdir -p "$idir"/tmp-initramfs/"$(dirname "$to")"
+         ln -sr "$from" "$idir"/tmp-initramfs/"$to"
+	) <<< "$f"
     done
-    ln -sr "$GOPATH/bin/stboot" "$OUTDIR/tmp-initramfs/init"
-    (cd "$OUTDIR/tmp-initramfs" && find . | cpio -o -H newc -R 0:0 --dereference) > "${out}.tmp"
-    mv "${out}.tmp" "$out"
-    pigz -f "$out"
-}
-
-build_archive_using_uroot() {
-    env GO111MODULE=off $GOBIN/u-root \
-	-build=bb \
-	-uinitcmd="stboot -loglevel=d" \
-	-defaultsh="" \
-	-uroot-source $GOPATH/src/$UROOT_PKG_PATH \
-	-o ${IDIR}/stboot.cpio \
-	$uroot_files \
-	$uroot_pkgs
-    pigz -f ${IDIR}/stboot.cpio
+    ln -sr "$GOPATH/bin/stboot" "$idir/tmp-initramfs/init"
+    (set -eu
+     cd "$idir/tmp-initramfs"
+     find . | cpio -o -H newc -R 0:0 --dereference
+    ) > "${out}".tmp
+    pigz -f "$out".tmp
+    mv "${out}".tmp.gz "$out"
 }
 
 create_iso() {
@@ -96,17 +72,15 @@ create_iso() {
     [[ -f "$OUTDIR"/stboot.iso ]] && mv "$OUTDIR"/stboot.iso "$OUTDIR"/stboot.iso.BAK
 
     # NOTE: Simply using an arbitrary stimage kernel will most likely fail with "no modules found matching '/lib/modules/*.ko'"
-    $GOBIN/stmgr uki create \
+    "$GOBIN"/stmgr uki create \
 		 -format iso \
 		 -out "$OUT" \
 		 -kernel "contrib/stboot/linuxboot.vmlinuz" \
 		 -cmdline console=ttyS0,115200 \
-		 -initramfs ${IDIR}/stboot.cpio.gz
+		 -initramfs "${IDIR}"/stboot.cpio.gz
 }
 
 install_dependencies
 create_default_stboot_config
-#build_archive_untested "${IDIR}/stboot.cpio" $uroot_files
-build_archive_using_uroot
+build_archive "${IDIR}"/stboot.cpio.gz $uroot_files
 create_iso
-
