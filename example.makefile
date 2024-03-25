@@ -26,7 +26,8 @@ CMDLINE = $(BUILD)/$(BINDIST).kcmdline
 INITRAMFS = $(BUILD)/$(BINDIST).cpio.gz
 CA = keys/rootcert.pem keys/rootkey.pem
 KEYS = keys/cert.pem keys/key.pem
-STBOOT = $(BUILD)/stboot.iso
+STBOOT_ISO = $(BUILD)/stboot.iso
+STBOOT_UKI = $(BUILD)/stboot.uki
 
 ####################
 all: stimage
@@ -34,10 +35,11 @@ stimage: $(STIMAGE)
 kernel: $(KERNEL)
 cmdline: $(CMDLINE)
 initramfs: $(INITRAMFS)
-stboot: $(STBOOT)
+stboot-iso stboot: $(STBOOT_ISO)
+stboot-uki: $(STBOOT_UKI)
 boot: boot-qemu
 clean:
-	-sudo rm -rf $(BUILD)/rootfs
+	([ ! -d $(BUILD)/rootfs ] || sudo rm -rf $(BUILD)/rootfs)
 	-rm -rf $(BUILD)
 	@echo "NOTE: Leaving keys and guest dir ($(GUEST_DATADIR)). Try make distclean."
 distclean: clean
@@ -59,8 +61,10 @@ $(CMDLINE):
 $(INITRAMFS): $(CONFIG)/pkgs/000base.pkglist
 	./build-initramfs $(CONFIG) $(FLAVOUR) $@ $^
 
-$(STBOOT): keys/rootcert.pem
-	./contrib/stboot/build-stboot $(STIMAGE_NAME) $@ $^
+$(STBOOT_ISO): keys/rootcert.pem
+	./contrib/stboot/build-stboot iso $(STIMAGE_NAME) $@ $^
+$(STBOOT_UKI): keys/rootcert.pem
+	./contrib/stboot/build-stboot uki $(STIMAGE_NAME) $@ $^
 
 ####################
 keys/rootcert.pem keys/rootkey.pem:
@@ -103,7 +107,7 @@ $(GUEST_OVMF_VARS): $(GUEST_DATADIR)/$(GUEST_NAME)
 $(GUEST_STDATA): $(GUEST_DATADIR)/$(GUEST_NAME)
 	./mkstdata.sh $@ $(GUEST_NAME) -dhcp
 
-boot-qemu: $(STBOOT) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA) wwworkaround
+boot-qemu: $(STBOOT_ISO) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA) wwworkaround
 	qemu-system-x86_64 \
 		-drive if=pflash,format=raw,readonly=on,file="$(OVMF_CODE)" \
 		-drive if=pflash,format=raw,file="$(GUEST_OVMF_VARS)" \
@@ -113,7 +117,7 @@ boot-qemu: $(STBOOT) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA) wwworkaroun
 		-rtc base=localtime \
 		-m $(QEMU_RAM) \
 		$(DISPLAY_MODE) $(QEMU_STDATA_DRIVE) \
-		-drive file="$(STBOOT)",format=raw,if=none,media=cdrom,id=drive-cd1,readonly=on \
+		-drive file="$(STBOOT_ISO)",format=raw,if=none,media=cdrom,id=drive-cd1,readonly=on \
 		-device ahci,id=ahci0 -device ide-cd,bus=ahci0.0,drive=drive-cd1,id=cd1,bootindex=1
 
 .PHONY: wwworkaround boot-qemu
@@ -128,7 +132,7 @@ VM_NETWORK ?= user
 #VM_NETWORK ?= bridge=br0
 
 # NOTE: no nvram=FILE in --boot so guest EFI variables end up in ~/.config/libvirt/qemu/nvram/$(VM_NAME)_VARS.fd
-install-vm: $(STBOOT) $(OVMF_CODE) $(GUEST_STDATA) wwworkaround
+install-vm: $(STBOOT_ISO) $(OVMF_CODE) $(GUEST_STDATA) wwworkaround
 	virt-install \
 		--debug \
 		--name $(GUEST_NAME) \
@@ -142,7 +146,7 @@ install-vm: $(STBOOT) $(OVMF_CODE) $(GUEST_STDATA) wwworkaround
 		--memory $(VM_RAM) \
 		--rng /dev/urandom \
 		--network $(VM_NETWORK) \
-		--disk "$(STBOOT)",format=raw,readonly=on \
+		--disk "$(STBOOT_ISO)",format=raw,readonly=on \
 		--disk "$(GUEST_STDATA)",format=raw
 
 .PHONY: install-vm

@@ -4,18 +4,19 @@ set -eu
 [ -z "$GOPATH" ] && { echo "$0: missing GOPATH"; exit 1; }
 [ -d "$GOPATH" ] || { echo "$0: missing $GOPATH"; exit 1; }
 
+FORMAT="$1"; shift
 STIMAGE_NAME="$1"; shift
 OUT="$1"; shift
 ROOTCERT="$1"; shift
 
 GOBIN=$GOPATH/bin
-STBOOT_VERSION=v0.3.4
+STBOOT_VERSION=v0.3.4		# FIXME: parameterize
 OUTDIR="$(dirname "$OUT")"
 IDIR="$OUTDIR/stboot"		# Intermediate output directory
 mkdir -p "$IDIR"
 
 install_dependencies() {
-    go install system-transparency.org/stmgr@latest
+    go install system-transparency.org/stmgr@latest # FIXME: parameterize version
     CGO_ENABLED=0 go install system-transparency.org/stboot@"${STBOOT_VERSION}"
 }    
 
@@ -67,20 +68,21 @@ build_archive() {
     mv "${out}".tmp.gz "$out"
 }
 
-create_iso() {
+create_img() {
     # stmgr refuses to overwrite target file
-    [[ -f "$OUTDIR"/stboot.iso ]] && mv "$OUTDIR"/stboot.iso "$OUTDIR"/stboot.iso.BAK
+    [[ -f "$OUT" ]] && mv "$OUT" "$OUT".BAK
 
     # NOTE: Simply using an arbitrary stimage kernel will most likely fail with "no modules found matching '/lib/modules/*.ko'"
     "$GOBIN"/stmgr uki create \
-		 -format iso \
+		 -format "$FORMAT" \
 		 -out "$OUT" \
 		 -kernel "contrib/stboot/linuxboot.vmlinuz" \
 		 -cmdline console=ttyS0,115200 \
 		 -initramfs "${IDIR}"/stboot.cpio.gz
 }
 
+
 install_dependencies
 create_default_stboot_config
 build_archive "${IDIR}"/stboot.cpio.gz $uroot_files
-create_iso
+create_img
