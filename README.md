@@ -34,7 +34,7 @@ setting up a local DNS resolver and a single network service on port
 
 ### Building an OS image
 
-To build an OS image, try running `make` without any arguments.
+To build an OS image, try running `make stimage`.
 
 The example Makefile will try to run everything needed in order to
 produce an ST image, output to build/stimage.{json,zip}.
@@ -54,28 +54,26 @@ for doing everything in the example Makefile.
 
 To boot your image, try running `make boot`.
 
-This will build stboot with a default config and ST root certificate.
+This will first build an ISO with stboot as init and contain a default
+config and ST root certificate.
 
-Building stboot using `contrib/stboot/build-stboot` requires GOPATH to
-be set to a directory where u-root, stboot and all go depencencies
-will be installed. Setting GOPATH to $PWD/go is a reasonable choice if
-you're unsure about how to deal with this.
+It will then start a VM, using QEMU, booting the ISO.
 
 ## Configuring your own image
 
 See config/example/README.md for an example of how to configure an OS image.
 
-## Interface
+## User interface
 
 The way users interact with the tools in this repository **will**
 change. Both in the short perspective when we find out that we need
 more functionality which isn't easily added while keeping the
 interface compatible. But also in the longer perspective when we start
-using mkosi for building OS images.
+using [mkosi][] for building OS images.
 
-[mkosi][] will be helpful by wrapping distro specific tools like
-mmdebstrap, dnf --installroot and pacman and allow support for all
-Linux distributions that mkosi knows about.
+mkosi will be helpful by wrapping distro specific tools like
+`mmdebstrap`, `dnf --installroot` and `pacman`, and allow support for
+all Linux distributions that mkosi knows about.
 
 The reason for publishing this repository before it has a stable
 interface is to give a hint of how OS images can be built while

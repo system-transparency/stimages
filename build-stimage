@@ -12,18 +12,9 @@ INITRAMFS="$1"; shift		# Path to file with initramfs.
 # Subsequent arguments are paths to signing certs and keys.
 
 ensure_stmgr() {
-    [ -z "$GOPATH" ] && GOPATH=$HOME/go
-    if [ -z "$(command -v stmgr)" ]; then
-	if [[ -n "$GOPATH" && -x "$GOPATH"/bin/stmgr ]]; then
-	    PATH=$PATH:"$GOPATH"/bin
-	else
-	    [ -z "$(command -v go)" ] && { echo "$0: missing a go compiler"; exit 1; }
-	    read -p "Installing stmgr with GOPATH=$GOPATH, ok? [y/N] " yesno
-	    [ "$yesno" != "y" ] && { echo "$0: missing stmgr in PATH"; exit 1; }
-	    go install system-transparency.org/stmgr@latest
-	    [ -z "$(command -v stmgr)" ] && PATH=$PATH:"$GOPATH"/bin
-	fi
-    fi
+    local newpath
+    newpath="$("$(dirname $0)"/build-stmgr latest)"
+    [ $? -eq 0 ] && PATH="$newpath"
 }
 
 create_image() {

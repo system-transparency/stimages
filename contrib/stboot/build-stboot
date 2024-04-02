@@ -1,22 +1,19 @@
 #! /bin/bash
 set -eu
 
-[ -z "$GOPATH" ] && { echo "$0: missing GOPATH"; exit 1; }
-[ -d "$GOPATH" ] || { echo "$0: missing $GOPATH"; exit 1; }
-
 FORMAT="$1"; shift
 STIMAGE_NAME="$1"; shift
 OUT="$1"; shift
 ROOTCERT="$1"; shift
 
-GOBIN=$GOPATH/bin
-STBOOT_VERSION=v0.3.4		# FIXME: parameterize
+STBOOT_VERSION=${STBOOT_VERSION-v0.3.4}
+STMGR_VERSION=${STMGR_VERSION-main}
 OUTDIR="$(dirname "$OUT")"
-IDIR="$OUTDIR/stboot"		# Intermediate output directory
+IDIR="$OUTDIR/stboot.tmp"	# Intermediate output directory
 mkdir -p "$IDIR"
 
 install_dependencies() {
-    go install system-transparency.org/stmgr@latest # FIXME: parameterize version
+    go install system-transparency.org/stmgr@"${STMGR_VERSION}"
     CGO_ENABLED=0 go install system-transparency.org/stboot@"${STBOOT_VERSION}"
 }    
 
@@ -31,9 +28,9 @@ create_default_stboot_config() {
       \"bonding_mode\": null,
       \"bond_name\": \"\"
     }"
-    "$GOBIN"/stmgr hostconfig check "$HC" > "${IDIR}"/host_config.json
+    stmgr hostconfig check "$HC" > "${IDIR}"/host_config.json
 
-    "$GOBIN"/stmgr trustpolicy check '
+    stmgr trustpolicy check '
     {
       "ospkg_signature_threshold": 1,
       "ospkg_fetch_method": "network"
@@ -59,7 +56,7 @@ build_archive() {
          ln -sr "$from" "$idir"/tmp-initramfs/"$to"
 	) <<< "$f"
     done
-    ln -sr "$GOPATH/bin/stboot" "$idir/tmp-initramfs/init"
+    ln -sr "$(command -v stboot)" "$idir/tmp-initramfs/init"
     (set -eu
      cd "$idir/tmp-initramfs"
      find . | cpio -o -H newc -R 0:0 --dereference
@@ -73,14 +70,13 @@ create_img() {
     [[ -f "$OUT" ]] && mv "$OUT" "$OUT".BAK
 
     # NOTE: Simply using an arbitrary stimage kernel will most likely fail with "no modules found matching '/lib/modules/*.ko'"
-    "$GOBIN"/stmgr uki create \
-		 -format "$FORMAT" \
-		 -out "$OUT" \
-		 -kernel "contrib/stboot/linuxboot.vmlinuz" \
-		 -cmdline console=ttyS0,115200 \
-		 -initramfs "${IDIR}"/stboot.cpio.gz
+    stmgr uki create \
+	  -format "$FORMAT" \
+	  -out "$OUT" \
+	  -kernel "contrib/stboot/linuxboot.vmlinuz" \
+	  -cmdline console=ttyS0,115200 \
+	  -initramfs "${IDIR}"/stboot.cpio.gz
 }
-
 
 install_dependencies
 create_default_stboot_config

@@ -1,0 +1,47 @@
+#! /bin/bash
+set -eu
+
+# Try to ensure that stmgr is installed.
+# Exit 0 if installed and 1 if not.
+# When exit 0, print PATH to use on stdout.
+
+STMGR_VERSION=latest
+
+printpathmaybe() {
+    [[ $? -eq 0 ]] && echo "$PATH"
+}
+trap printpathmaybe EXIT
+
+inpathp() {
+    local PATH="$PATH"
+    [[ $# -gt 0 ]] && PATH="$PATH":"$1"
+    command -v stmgr >/dev/null && return 0
+    return 1
+}
+
+checkpaths() {
+    inpathp && return 0
+    [[ "${GOBIN+x}" ]] && inpathp "$GOBIN" && { PATH="$PATH":"$GOBIN"; return 0; }
+    [[ "${GOPATH+x}" ]] && inpathp "$GOPATH/bin" && { PATH="$PATH":"$GOPATH/bin"; return 0; }
+    inpathp "$HOME/go/bin" && { PATH="$PATH":"$HOME/go/bin"; return 0; }
+    return 1
+}
+
+ensure_stmgr() {
+    # NOTE: Does not ensure version.
+    local version="$1"; shift
+
+    checkpaths && return 0
+
+    # go install stmgr
+    command -v go >/dev/null || { echo "$0: missing go compiler"; return 1; }
+    # TODO: do this only in an interactive shell:
+    # read -p "Installing stmgr, ok? [y/N] " yesno
+    # [[ "$yesno" != "y" ]] && { echo "$0: missing stmgr in PATH"; return 1; }
+    go install "system-transparency.org/stmgr@${version}" > /dev/null
+
+    checkpaths && return 0
+    return 1
+}
+
+ensure_stmgr "${1-$STMGR_VERSION}"

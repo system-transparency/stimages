@@ -59,7 +59,7 @@ $(CMDLINE):
 	./build-kcmdline $(CONFIG) $(FLAVOUR) $@
 
 $(INITRAMFS): $(CONFIG)/pkgs/000base.pkglist
-	./build-initramfs $(CONFIG) $(FLAVOUR) $@ $^
+	./build-initramfs $(CONFIG) $(FLAVOUR) $@
 
 $(STBOOT_ISO): keys/rootcert.pem
 	./contrib/stboot/build-stboot iso $(STIMAGE_NAME) $@ $^
@@ -109,9 +109,12 @@ $(GUEST_STDATA): $(GUEST_DATADIR)/$(GUEST_NAME)
 
 boot-qemu: $(STBOOT_ISO) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA) wwworkaround
 	qemu-system-x86_64 \
+		-accel kvm \
+		-accel tcg \
+		-no-reboot \
+		-pidfile qemu.pid \
 		-drive if=pflash,format=raw,readonly=on,file="$(OVMF_CODE)" \
 		-drive if=pflash,format=raw,file="$(GUEST_OVMF_VARS)" \
-		-enable-kvm -M q35 \
 		-object rng-random,filename=/dev/urandom,id=rng0 \
 		-device virtio-rng-pci,rng=rng0 \
 		-rtc base=localtime \

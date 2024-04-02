@@ -1,0 +1,55 @@
+variables:
+  STMGR_VERSION: latest
+
+build-example-os:
+  stage: build
+  tags:
+    - longrunning
+  image: debian:bookworm
+  before_script:
+    - apt-get -qq update
+    - apt-get install -qqy golang-1.19-go ca-certificates pigz make cpio sudo mmdebstrap
+    - |
+      export GOBIN="${PWD}"/.go/bin; mkdir -p "$GOBIN"
+      export PATH="${PATH}":/usr/lib/go-1.19/bin:"${GOBIN}"
+    - go install system-transparency.org/stmgr@"${STMGR_VERSION}"
+  script:
+    - echo stimages > config/example/pw.root # Default root password in OS image
+    - make stimage
+  artifacts:
+    paths:
+      - build/stimage.*
+
+build-stboot:
+  stage: build
+  image: debian:bookworm
+  before_script:
+    - apt-get -qq update
+    - apt-get install -qqy golang-1.19-go ca-certificates pigz make cpio
+    - |
+      export GOBIN="${PWD}"/.go/bin; mkdir -p "$GOBIN"
+      export PATH="${PATH}":/usr/lib/go-1.19/bin:"${GOBIN}"
+    - go install system-transparency.org/stmgr@"${STMGR_VERSION}"
+  script:
+    - make stboot
+  artifacts:
+    paths:
+      - build/stboot.*
+
+.boot-example:           # Disabled -- artifact downloads are failing.
+  stage: test
+  tags:
+    - longrunning
+  image: debian:bookworm
+  before_script:
+    - apt-get -qq update
+    - apt-get install -qqy curl libarchive-tools qemu-system-x86 ovmf ncat
+  script:
+    - curl -Ls "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/artifacts/${CI_COMMIT_BRANCH}/download?job=build-stboot" | bsdtar -x
+    - curl -Ls "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/artifacts/${CI_COMMIT_BRANCH}/download?job=build-example-os" | bsdtar -x
+    - mv -v stimages/build/* build/
+    - test/boot.sh
+  artifacts:
+    when: always
+    paths:
+      - qemu.log
