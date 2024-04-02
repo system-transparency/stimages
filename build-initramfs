@@ -4,12 +4,12 @@ set -eu
 CONFIG="$1"; shift
 FLAVOUR="$1"; shift
 OUT="$1"; shift			# NOTE: Relative to $(dirname $0)
-PKGLIST_BASE="$1"; shift
 
 KERNEL_DEB= # Optional: Path to Debian package (.deb) with kernel to use
 [ $# -gt 0 ] && { KERNEL_DEB="$1"; shift; }
 
 DEBIAN_RELEASE=bookworm
+PKGLIST_BASE="$CONFIG"/pkgs/000base.pkglist
 
 check_build_deps() {
     for cmd in $@; do
