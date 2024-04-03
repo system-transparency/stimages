@@ -46,10 +46,7 @@ build-stboot:
     paths:
       - build/stboot.*
 
-# Disabled -- stboot is failing when downloading os image.
-# TODO: Use qemu from bookworm-backports and -nic guestfwd running a
-#       minimal http server.
-.boot-example:
+boot-example:
   stage: boot
   tags:
     - longrunning
@@ -59,7 +56,7 @@ build-stboot:
     - apt-get install -qqy make qemu-system-x86 ovmf ncat
   script:
     - cp /usr/share/OVMF/OVMF_VARS.fd guest_nvram
-    - (for e in json zip; do nc -lc "echo -e 'HTTP/1.1 200 OK\n'; cat build/stimage.$e" 0.0.0.0 8080; done) &
+    - (for e in json zip; do nc -lc "printf 'HTTP/1.1 200 OK\n\n'; cat build/stimage.$e" 0.0.0.0 8080; done) &
     - test/boot.sh ./boot-qemu.sh build/stboot.iso guest_nvram
   artifacts:
     when: always
