@@ -1,8 +1,13 @@
 variables:
   STMGR_VERSION: latest
 
+stages:
+  - build/1
+  - build/2
+  - boot
+
 build-example-os:
-  stage: build
+  stage: build/1
   tags:
     - longrunning
   image: debian:bookworm
@@ -16,12 +21,15 @@ build-example-os:
   script:
     - echo stimages > config/example/pw.root # Default root password in OS image
     - make stimage
+    - cat /dev/null > keys/key.pem     # Don't publish keys
+    - cat /dev/null > keys/rootkey.pem # Don't publish keys
   artifacts:
     paths:
       - build/stimage.*
+      - keys/
 
 build-stboot:
-  stage: build
+  stage: build/2
   image: debian:bookworm
   before_script:
     - apt-get -qq update
@@ -36,20 +44,22 @@ build-stboot:
     paths:
       - build/stboot.*
 
-.boot-example:           # Disabled -- artifact downloads are failing.
-  stage: test
+# Disabled -- stboot is failing when downloading os image
+# TODO: Use qemu from bookworm-backports and -nic guestfwd=
+.boot-example:
+  stage: boot
   tags:
     - longrunning
   image: debian:bookworm
   before_script:
     - apt-get -qq update
-    - apt-get install -qqy curl libarchive-tools qemu-system-x86 ovmf ncat
+    - apt-get install -qqy make qemu-system-x86 ovmf ncat
   script:
-    - curl -Ls "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/artifacts/${CI_COMMIT_BRANCH}/download?job=build-stboot" | bsdtar -x
-    - curl -Ls "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/artifacts/${CI_COMMIT_BRANCH}/download?job=build-example-os" | bsdtar -x
-    - mv -v stimages/build/* build/
-    - test/boot.sh
+    - cp /usr/share/OVMF/OVMF_VARS.fd guest_nvram
+    - (for e in json zip; do nc -lc "echo -e 'HTTP/1.1 200 OK\n'; cat build/stimage.$e" 0.0.0.0 8080; done) &
+    - test/boot.sh ./boot-qemu.sh build/stboot.iso guest_nvram
   artifacts:
     when: always
     paths:
       - qemu.log
+      - guest_nvram

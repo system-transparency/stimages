@@ -14,7 +14,7 @@ STIMAGE_NAME ?= stimage
 BINDIST ?= debian-bookworm-amd64
 
 # URL to download image from
-NETBOOT_URL ?= http://10.0.2.2:8080/$(STIMAGE_NAME).zip
+NETBOOT_URL ?= http://10.0.2.2:8080/$(STIMAGE_NAME)
 
 # Cert/key file pairs to sign the image with. Set to empty string to disable signing.
 SIGN ?= $(KEYS)
@@ -48,23 +48,24 @@ distclean: clean
 
 .PHONY: all stimage kernel cmdline initramfs boot clean distclean
 ####################
-$(STIMAGE): $(KERNEL) $(CMDLINE) $(INITRAMFS) $(SIGN)
-	./build-stimage $@ $(NETBOOT_URL) $^
+$(STIMAGE): $(INITRAMFS) $(KERNEL) $(CMDLINE) $(SIGN)
+	./build-stimage $@ $(NETBOOT_URL).zip $(KERNEL) $(CMDLINE) $(INITRAMFS) $(SIGN)
 
 # NOTE: Kernel is copied from initramfs (kernel modules are not)
-$(KERNEL): $(INITRAMFS)
+# NOTE: Avoid circular dependencies by not depending on initramfs even though it's needed
+$(KERNEL):
 	./build-kernel $(CONFIG) $(FLAVOUR) $@
 
 $(CMDLINE):
 	./build-kcmdline $(CONFIG) $(FLAVOUR) $@
 
 $(INITRAMFS): $(CONFIG)/pkgs/000base.pkglist
-	./build-initramfs $(CONFIG) $(FLAVOUR) $@
+	./build-initramfs $(CONFIG) $@ $(FLAVOUR)
 
 $(STBOOT_ISO): keys/rootcert.pem
-	./contrib/stboot/build-stboot iso $(STIMAGE_NAME) $@ $^
+	./contrib/stboot/build-stboot $(NETBOOT_URL).json $< iso $@
 $(STBOOT_UKI): keys/rootcert.pem
-	./contrib/stboot/build-stboot uki $(STIMAGE_NAME) $@ $^
+	./contrib/stboot/build-stboot $(NETBOOT_URL).json $< uki $@
 
 ####################
 keys/rootcert.pem keys/rootkey.pem:
@@ -76,14 +77,11 @@ keys/cert.pem keys/key.pem:
 	(cd keys && stmgr keygen certificate --rootCert rootcert.pem --rootKey rootkey.pem)
 
 ####################
-QEMU_RAM ?= 4G
 GUEST_DATADIR ?= hosts
 GUEST_NAME ?= example-host
 GUEST_OVMF_VARS ?= $(GUEST_DATADIR)/$(GUEST_NAME)/OVMF_VARS.fd
 OVMF_DIR = /usr/share/OVMF
 OVMF_CODE = $(OVMF_DIR)/OVMF_CODE.fd
-# For kernel booted with console=ttyS0,115200, use -nographic. Else use -display gtk.
-DISPLAY_MODE ?= -nographic
 
 ifdef DO_USE_STDATA
 GUEST_STDATA ?= $(GUEST_DATADIR)/$(GUEST_NAME)/stdata.img
@@ -108,20 +106,7 @@ $(GUEST_STDATA): $(GUEST_DATADIR)/$(GUEST_NAME)
 	./mkstdata.sh $@ $(GUEST_NAME) -dhcp
 
 boot-qemu: $(STBOOT_ISO) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA) wwworkaround
-	qemu-system-x86_64 \
-		-accel kvm \
-		-accel tcg \
-		-no-reboot \
-		-pidfile qemu.pid \
-		-drive if=pflash,format=raw,readonly=on,file="$(OVMF_CODE)" \
-		-drive if=pflash,format=raw,file="$(GUEST_OVMF_VARS)" \
-		-object rng-random,filename=/dev/urandom,id=rng0 \
-		-device virtio-rng-pci,rng=rng0 \
-		-rtc base=localtime \
-		-m $(QEMU_RAM) \
-		$(DISPLAY_MODE) $(QEMU_STDATA_DRIVE) \
-		-drive file="$(STBOOT_ISO)",format=raw,if=none,media=cdrom,id=drive-cd1,readonly=on \
-		-device ahci,id=ahci0 -device ide-cd,bus=ahci0.0,drive=drive-cd1,id=cd1,bootindex=1
+	./boot-qemu.sh "$(STBOOT_ISO)" "$(GUEST_OVMF_VARS)" "$(QEMU_STDATA_DRIVE)"
 
 .PHONY: wwworkaround boot-qemu
 
