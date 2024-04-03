@@ -1,5 +1,5 @@
 variables:
-  STMGR_VERSION: latest
+  STMGR_VERSION: v0.3.1
 
 stages:
   - build/1
@@ -28,6 +28,8 @@ build-example-os:
       - build/stimage.*
       - keys/
 
+# Depends on build-example-os for keys/rootcert.pem which is built
+# into the stboot binary.
 build-stboot:
   stage: build/2
   image: debian:bookworm
@@ -44,8 +46,9 @@ build-stboot:
     paths:
       - build/stboot.*
 
-# Disabled -- stboot is failing when downloading os image
-# TODO: Use qemu from bookworm-backports and -nic guestfwd=
+# Disabled -- stboot is failing when downloading os image.
+# TODO: Use qemu from bookworm-backports and -nic guestfwd running a
+#       minimal http server.
 .boot-example:
   stage: boot
   tags:
