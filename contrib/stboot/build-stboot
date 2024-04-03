@@ -1,16 +1,31 @@
 #! /bin/bash
 set -eu
 
-FORMAT="$1"; shift
-STIMAGE_NAME="$1"; shift
-OUT="$1"; shift
+STIMAGE_JSON_URL="$1"; shift
 ROOTCERT="$1"; shift
+[ $# -gt 0 ] && { FORMAT="$1"; shift; }
+[ $# -gt 0 ] && { OUT="$1"; shift; }
 
 STBOOT_VERSION=${STBOOT_VERSION-v0.3.4}
 STMGR_VERSION=${STMGR_VERSION-main}
+
+FORMAT=${FORMAT-iso}
+OUT=${OUT-stboot.$FORMAT}
 OUTDIR="$(dirname "$OUT")"
 IDIR="$OUTDIR/stboot.tmp"	# Intermediate output directory
 mkdir -p "$IDIR"
+
+debug_print_input() {
+    echo STIMAGE_JSON_URL="$STIMAGE_JSON_URL"
+    echo ROOTCERT="$ROOTCERT"
+    echo FORMAT="$FORMAT"
+    echo OUT="$OUT"
+    echo STBOOT_VERSION="$STBOOT_VERSION"
+    echo STMGR_VERSION="$STMGR_VERSION"
+}
+
+[ -r "$ROOTCERT" ] || { echo "$0: $ROOTCERT: file not found or not readable"; exit 1; }
+[ -d "$OUTDIR" ] || { echo "$0: $OUTDIR: directory not found"; exit 1; }
 
 install_dependencies() {
     go install system-transparency.org/stmgr@"${STMGR_VERSION}"
@@ -24,7 +39,7 @@ create_default_stboot_config() {
       \"gateway\": null,
       \"dns\": null,
       \"network_interfaces\": null,
-      \"ospkg_pointer\": \"http://10.0.2.2:8080/${STIMAGE_NAME}.json\",
+      \"ospkg_pointer\": \"${STIMAGE_JSON_URL}\",
       \"bonding_mode\": null,
       \"bond_name\": \"\"
     }"

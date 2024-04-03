@@ -1,10 +1,11 @@
 #! /bin/bash
 set -eu
 
-make boot >qemu.log 2>&1 &
+$@ >qemu.log 2>&1 &
 
 function cleanup() {
-    [[ ! -f qemu.pid ]] || { kill "$(cat qemu.pid)"; rm qemu.pid; }
+    [[ ! -f qemu.pid ]] || kill "$(cat qemu.pid)"
+    rm -f qemu.pid
 }
 trap cleanup EXIT
 
