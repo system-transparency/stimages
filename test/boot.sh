@@ -9,7 +9,7 @@ function cleanup() {
 }
 trap cleanup EXIT
 
-for delay in 20 2 2 2 2 2 30; do # 1 minute in total
+for delay in 30 10 10 10 10 10 10 30; do # 2 minutes in total
     sleep "${delay}"
     tail qemu.log | grep -q '^amnesiac-debian login: ' || continue
     exit 0
