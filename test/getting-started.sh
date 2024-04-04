@@ -8,7 +8,7 @@ set -eu
 #   podman run -it --rm -v "${PWD}:/c:z" debian:bookworm /c/test/getting-started.sh
 
 [ $# -gt 0 ] && { STIMAGESVER="$1"; shift; }
-STIMAGESVER=${STIMAGESVER-latest}
+STIMAGESVER=${STIMAGESVER-main}
 
 apt-get update
 apt-get -y install sudo
