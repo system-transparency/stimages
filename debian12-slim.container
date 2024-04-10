@@ -1,5 +1,5 @@
 FROM debian:bookworm-slim
 
 RUN apt update && apt upgrade -y
-RUN apt install -y mmdebstrap pigz sudo git cpio
+RUN apt install -y mmdebstrap sudo git cpio
 WORKDIR /c

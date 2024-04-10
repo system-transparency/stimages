@@ -76,7 +76,7 @@ build_archive() {
      cd "$idir/tmp-initramfs"
      find . | cpio -o -H newc -R 0:0 --dereference
     ) > "${out}".tmp
-    pigz -f "$out".tmp
+    gzip -f "$out".tmp
     mv "${out}".tmp.gz "$out"
 }
 

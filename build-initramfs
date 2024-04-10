@@ -108,7 +108,7 @@ create_cpio_archive() {
     # NOTE: If mmdebstrap was run in a container, cpio needs to be run in a container because file ownership.
     cat >"$OUTDIR"/mkcpio.sh <<EOF
 set -eu
-(cd $rootfs && find . | LC_ALL=C sort | cpio --quiet -o -H newc | pigz) > "$OUT"
+(cd $rootfs && find . | LC_ALL=C sort | cpio --quiet -o -H newc | gzip) > "$OUT"
 EOF
     $CONTAIN sudo /bin/bash "$OUTDIR"/mkcpio.sh
     rm "$OUTDIR"/mkcpio.sh

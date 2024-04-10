@@ -144,4 +144,4 @@ install-vm: $(STBOOT_ISO) $(OVMF_CODE) $(GUEST_STDATA) wwworkaround
 # all of them installed you should be able to build everything.
 .PHONY: check-all-dependencies
 check-all-dependencies:
-	./check-deps chroot cpio find git go losetup mkfs mmdebstrap mount nc parted pigz podman qemu-system-x86_64 stmgr sudo umount virt-install
+	./check-deps chroot cpio find git go losetup mkfs mmdebstrap mount nc parted podman qemu-system-x86_64 stmgr sudo umount virt-install

@@ -17,7 +17,7 @@ cd /c
 
 ## project/docs/content/docs/introduction/build.md
 ### Prepare for building
-sudo apt install -y golang-go git cpio pigz ca-certificates
+sudo apt install -y golang-go git cpio ca-certificates
 sudo apt install -y mmdebstrap sudo
 
 git clone -b "$STIMAGESVER" https://git.glasklar.is/system-transparency/core/stimages.git
