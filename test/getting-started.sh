@@ -4,24 +4,40 @@ set -eu
 # Test the ST getting started guide by running the commands in project/docs/content/docs/introduction/build.md.
 # NOTE: This file is manually maintained -- when the docs are being changed, someone need to update this file.
 
+# Prerequisites:
+# - Debian12 or podman
+# - 1.2G free space on $TMPDIR (/tmp)
+# - Internet access, for downloading Debian packages
+
 # Usage:
-#   podman run -it --rm -v "${PWD}:/c:z" debian:bookworm /c/test/getting-started.sh
+#   test/getting-started.sh && rm -irf stimages
+# Usage, running in a podman container:
+#   podman run -it --rm -v "$PWD:/c" debian:bookworm /c/test/getting-started.sh
 
 [ $# -gt 0 ] && { STIMAGESVER="$1"; shift; }
 STIMAGESVER=${STIMAGESVER-main}
 
-apt-get update
-apt-get -y install sudo
-
-cd /c
+if [ -v container ]; then
+    trap bash EXIT
+    apt-get update
+    apt-get -y install sudo
+    cd /c
+fi
 
 ## project/docs/content/docs/introduction/build.md
 ### Prepare for building
-sudo apt install -y golang-go git cpio pigz ca-certificates
-sudo apt install -y mmdebstrap sudo
+[ -z "$(command -v go)" ] && sudo apt install -y golang-go
+[ -z "$(command -v update-ca-certificates)" ] && sudo apt install -y ca-certificates
+[ -z "$(command -v git)" ] && sudo apt install -y git
+[ -z "$(command -v cpio)" ] && sudo apt install -y cpio
+[ -z "$(command -v mmdebstrap)" ] && sudo apt install -y mmdebstrap
+[ -z "$(command -v pigz)" ] && sudo apt install -y pigz
+find /usr/lib* -name libsystemd-shared\*.so -quit || sudo apt install -y libsystemd-shared
+#[ ! -e FIXME ] && sudo apt install -y man-db
 
 git clone -b "$STIMAGESVER" https://git.glasklar.is/system-transparency/core/stimages.git
-cd stimages
+pushd stimages
+[ -v container ] || trap popd EXIT
 
 mkdir -p go/bin; GOBIN="$(realpath go/bin)"; export GOBIN
 export PATH="$GOBIN":"$PATH"
@@ -32,7 +48,7 @@ go install system-transparency.org/stmgr@v0.3.1
 (cd keys && stmgr keygen certificate --rootCert rootcert.pem --rootKey rootkey.pem)
 
 ### Prepare for booting in QEMU
-sudo apt install -y qemu-system-x86 ovmf ncat
+[ -z "$(command -v qemu-system-x86_64)" ] && sudo apt install -y qemu-system-x86 ovmf ncat
 
 ## Build your own ST bootloader image
 contrib/stboot/build-stboot http://10.0.2.2:8080/my-os.json keys/rootcert.pem
@@ -45,7 +61,7 @@ stmgr ospkg create \
 	  --label="My example ST package" \
 	  --initramfs=my-os.cpio.gz \
 	  --kernel=my-os.vmlinuz \
-	  --cmdline="console=ttyS0,115200n8 ro rdinit=/lib/systemd/systemd systemd.log_level=debug" \
+	  --cmdline="console=ttyS0,115200n8 ro rdinit=/lib/systemd/systemd" \
 	  --url=http://10.0.2.2:8080/my-os.zip \
 	  --out=my-os.zip
 
@@ -71,5 +87,3 @@ qemu-system-x86_64 \
         -device virtio-rng-pci,rng=rng0 \
         -drive file="stboot.iso",format=raw,if=none,media=cdrom,id=drive-cd1,readonly=on \
         -device ahci,id=ahci0 -device ide-cd,bus=ahci0.0,drive=drive-cd1,id=cd1,bootindex=1
-
-bash -

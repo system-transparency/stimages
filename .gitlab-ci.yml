@@ -13,7 +13,7 @@ build-example-os:
   image: debian:bookworm
   before_script:
     - apt-get -qq update
-    - apt-get install -qqy golang-1.19-go ca-certificates pigz make cpio sudo mmdebstrap
+    - apt-get install -qqy golang-1.19-go ca-certificates make cpio mmdebstrap libsystemd-shared
     - |
       export GOBIN="${PWD}"/.go/bin; mkdir -p "$GOBIN"
       export PATH="${PATH}":/usr/lib/go-1.19/bin:"${GOBIN}"
