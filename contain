@@ -3,10 +3,12 @@ set -eu
 
 # Run a command in a container defined by $CONTAINERFILE.
 # If first argument is -r, refresh the image first.
+# If first argument is -i, invoke podman run with -it for an interactive session.
 
 IMAGE_NAME=stimage
 CONTAINERFILE=debian12-slim.container
 VOLUME_MOUNT_OPTS=		# Use :z for SELinux relabeling
+INTERACTIVE=			# Invoke with -i for an interactive session
 
 [ -f /etc/fedora-release ] && VOLUME_MOUNT_OPTS+=:z
 
@@ -17,14 +19,27 @@ refresh_deps() {
     done < <(grep ^FROM "$CF")
 }
 
-# Refresh images we depend upon
-if [ "$1" = "-r" ]; then
+# Refresh images we depend upon?
+if [[ $# -gt 0 && "$1" = "-r" ]]; then
     shift
     refresh_deps "$CONTAINERFILE"
+fi
+
+# Run interactively?
+if [[ $# -gt 0 && "$1" = "-i" ]]; then
+    shift
+    INTERACTIVE=-it
 fi
 
 # Build image
 podman build -q -t "$IMAGE_NAME" -f "$CONTAINERFILE"
 
 # Run image in new container with current directory mounted on /c
+# NOTE: slirp4netns allow_host_loopback for container to reach apt-cacher-ng (and everything else on any i/f including loopback)
+# FIXME: limit access to 3142/tcp, perhaps also on a specific address (10.0.2.2)
+#        NOTE: failed attempt: --network pasta:-I,tap0,--ipv4-only,-a,10.0.2.0,-n,24,-g,10.0.2.2,--dns-forward,10.0.2.3,--no-ndp,--no-dhcpv6,--no-dhcp,--tcp-ports,3142
+podman run $INTERACTIVE --rm \
+       --network slirp4netns:allow_host_loopback=true \
+       --volume "${PWD}:/c${VOLUME_MOUNT_OPTS}" "$IMAGE_NAME" $@
+
 podman run --rm --volume "${PWD}:/c${VOLUME_MOUNT_OPTS}" "$IMAGE_NAME" $@

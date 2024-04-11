@@ -9,10 +9,13 @@ set -eu
 # - 1.2G free space on $TMPDIR (/tmp)
 # - Internet access, for downloading Debian packages
 
-# Usage:
+# Usage, on a Debian 12 system:
 #   test/getting-started.sh && rm -irf stimages
+#
 # Usage, running in a podman container:
 #   podman run -it --rm -v "$PWD:/c" debian:bookworm /c/test/getting-started.sh
+# For use on SELinux system, add :z to $PWD:/c
+# For using apt-cacher-ng on host system, add -e APT_CACHE=10.0.2.2:3142
 
 [ $# -gt 0 ] && { STIMAGESVER="$1"; shift; }
 STIMAGESVER=${STIMAGESVER-main}
@@ -31,7 +34,6 @@ fi
 [ -z "$(command -v git)" ] && sudo apt install -y git
 [ -z "$(command -v cpio)" ] && sudo apt install -y cpio
 [ -z "$(command -v mmdebstrap)" ] && sudo apt install -y mmdebstrap
-[ -z "$(command -v pigz)" ] && sudo apt install -y pigz
 find /usr/lib* -name libsystemd-shared\*.so -quit || sudo apt install -y libsystemd-shared
 #[ ! -e FIXME ] && sudo apt install -y man-db
 

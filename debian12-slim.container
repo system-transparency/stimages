@@ -1,5 +1,5 @@
 FROM debian:bookworm-slim
 
 RUN apt-get -qq update && apt-get upgrade -y
-RUN apt-get install -qqy mmdebstrap fakeroot libsystemd-shared man-db git cpio
+RUN apt-get install -qqy mmdebstrap fakeroot iproute2 libsystemd-shared git cpio
 WORKDIR /c

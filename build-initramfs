@@ -11,6 +11,18 @@ KERNEL_DEB=${KERNEL_DEB-}
 
 DEBIAN_RELEASE=bookworm
 PKGLIST_BASE="$CONFIG"/pkgs/000base.pkglist
+APT_CACHE=${APT_CACHE-auto}
+
+if [[ "$APT_CACHE" == "auto" ]]; then
+    if [[ -n "$(command -v ss)" ]]; then
+	(while read -r _ _ _ laddr _; do
+	     if echo $laddr | grep -q ':3142$'; then
+		 APT_CACHE="$laddr"
+		 break
+	     fi
+	 done) <<< $(ss -tln)
+    fi
+fi
 
 OUTDIR=$(dirname "$OUT")
 [ -d "$OUTDIR" ] || mkdir -p "$OUTDIR"
@@ -28,26 +40,32 @@ fi
 
 build_rootfs() {
     ### Build APT sources.list
-    sources_list="$OUTDIR"/sources.list
-    case "$DEBIAN_RELEASE" in	# https://wiki.debian.org/SourcesList
-	bookworm)
-	    # NOTE: non-free-firmware for intel-microcode on physical machines
-	    DEBIAN_COMPONENTS="main non-free-firmware"
-	    cat >$sources_list <<EOF
-deb https://ftp.acc.umu.se/debian/          $DEBIAN_RELEASE          $DEBIAN_COMPONENTS
-deb https://ftp.acc.umu.se/debian/          $DEBIAN_RELEASE-updates  $DEBIAN_COMPONENTS
-deb https://deb.debian.org/debian-security/ $DEBIAN_RELEASE-security $DEBIAN_COMPONENTS
+    local sources_list="$OUTDIR"/sources.list
+    local proto=https
+    local mmdebstrap_apt_cache=
+    local aptopt_tmpfile=
+    if [[ "$APT_CACHE" =~ .*:[0-9]+$ ]]; then
+        proto=http              # Use HTTP when using cache.
+        mmdebstrap_apt_cache=
+        aptopt_tmpfile="$(mktemp aptopt.XXXXXXXXXXXX)" # Use a tempfile to get the quoting right
+        echo "Acquire::http { Proxy \"http://${APT_CACHE}\"; }" > "$aptopt_tmpfile"
+        mmdebstrap_apt_cache+=" --aptopt=$aptopt_tmpfile"
+    fi
+    case "$DEBIAN_RELEASE" in   # https://wiki.debian.org/SourcesList
+        bookworm)
+            DEBIAN_COMPONENTS="main non-free-firmware" # NOTE: non-free-firmware for intel-microcode on physical machines
+            cat >"$sources_list" <<EOF # deb.do is Debians CDN
+deb ${proto}://deb.debian.org/debian/          ${DEBIAN_RELEASE}          ${DEBIAN_COMPONENTS}
+deb ${proto}://deb.debian.org/debian/          ${DEBIAN_RELEASE}-updates  ${DEBIAN_COMPONENTS}
+deb ${proto}://deb.debian.org/debian-security/ ${DEBIAN_RELEASE}-security ${DEBIAN_COMPONENTS}
 EOF
-	    ;;
+            ;;
     esac
 
     ### Run mmdebstrap
-    # TODO: use $APT_CACHER_NG for local proxy, add --aptopt and use http
-    #     --aptopt='Acquire::http { Proxy "http://localhost:3142"; }'
-    mmdebstrap_includes="
-	--include=$(grep -E -v '^[[:space:]]*#|^[[:space:]]*$' ${PKGLIST_BASE} | tr '\n' ',')"
+    local mmdebstrap_includes="--include=$(grep -E -v '^[[:space:]]*#|^[[:space:]]*$' ${PKGLIST_BASE} | tr '\n' ',')"
     if [ -f ${CONFIG}/pkgs/${FLAVOUR}.pkglist ]; then
-	mmdebstrap_includes+=" --include=$(grep -E -v '^[[:space:]]*#|^[[:space:]]*$' ${CONFIG}/pkgs/${FLAVOUR}.pkglist | tr '\n' ',')"
+        mmdebstrap_includes+=" --include=$(grep -E -v '^[[:space:]]*#|^[[:space:]]*$' ${CONFIG}/pkgs/${FLAVOUR}.pkglist | tr '\n' ',')"
     fi
     echo "$0: running mmdebstrap, will take a minute or two"
     mmdebstrap --mode fakeroot --format tar --architectures=amd64 --variant=minbase     \
@@ -57,11 +75,12 @@ EOF
                --customize-hook="copy-in $CONFIG/scripts/setup-in-chroot.sh /tmp/"      \
                --customize-hook="chroot \$1 /tmp/setup-in-chroot.sh"                    \
                --customize-hook="echo \"root:${PW_ROOT}\" | chroot \$1 chpasswd"        \
+               $mmdebstrap_apt_cache                                                    \
                $mmdebstrap_includes                                                     \
                $DEBIAN_RELEASE                                                          \
                $ROOTAR                                                                  \
                $sources_list
-    rm "$sources_list"
+    rm -f "$sources_list" "$aptopt_tmpfile"
 }
 
 copy_kernel() {
