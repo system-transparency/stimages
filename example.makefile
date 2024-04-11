@@ -19,6 +19,9 @@ NETBOOT_URL ?= http://10.0.2.2:8080/$(STIMAGE_NAME)
 # Cert/key file pairs to sign the image with. Set to empty string to disable signing.
 SIGN ?= $(KEYS)
 
+# Set to ./contain in order to run mmdebstrap in a container
+CONTAIN ?=
+
 ####################
 STIMAGE = $(BUILD)/$(STIMAGE_NAME).zip
 KERNEL = $(BUILD)/$(BINDIST).vmlinuz
@@ -39,12 +42,9 @@ stboot-iso stboot: $(STBOOT_ISO)
 stboot-uki: $(STBOOT_UKI)
 boot: boot-qemu
 clean:
-	([ ! -d $(BUILD)/rootfs ] || sudo rm -rf $(BUILD)/rootfs)
-	-rm -rf $(BUILD)
-	@echo "NOTE: Leaving keys and guest dir ($(GUEST_DATADIR)). Try make distclean."
+	$(CONTAIN) rm -rf $(BUILD)
 distclean: clean
 	-rm -rf $(KEYS) $(CA) $(GUEST_DATADIR)
-	-@([ -n "$$GOPATH" ] && [ -d "$$GOPATH" ] && echo "NOTE: Leaving GOPATH ($$GOPATH) as is")
 
 .PHONY: all stimage kernel cmdline initramfs boot clean distclean
 ####################
@@ -60,7 +60,7 @@ $(CMDLINE):
 	./build-kcmdline $(CONFIG) $(FLAVOUR) $@
 
 $(INITRAMFS): $(CONFIG)/pkgs/000base.pkglist
-	./build-initramfs $(CONFIG) $@ $(FLAVOUR)
+	$(CONTAIN) ./build-initramfs $(CONFIG) $@ $(FLAVOUR)
 
 $(STBOOT_ISO): keys/rootcert.pem
 	./contrib/stboot/build-stboot $(NETBOOT_URL).json $< iso $@
@@ -144,4 +144,4 @@ install-vm: $(STBOOT_ISO) $(OVMF_CODE) $(GUEST_STDATA) wwworkaround
 # all of them installed you should be able to build everything.
 .PHONY: check-all-dependencies
 check-all-dependencies:
-	./check-deps chroot cpio find git go losetup mkfs mmdebstrap mount nc parted pigz podman qemu-system-x86_64 stmgr sudo umount virt-install
+	./check-deps chroot cpio find git go losetup mkfs mmdebstrap mount nc parted gzip podman qemu-system-x86_64 stmgr sudo umount virt-install

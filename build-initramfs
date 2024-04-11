@@ -12,31 +12,21 @@ KERNEL_DEB=${KERNEL_DEB-}
 DEBIAN_RELEASE=bookworm
 PKGLIST_BASE="$CONFIG"/pkgs/000base.pkglist
 
-check_build_deps() {
-    for cmd in $@; do
-	[ -z $(command -v "$cmd") ] && return 1
-    done
-    return 0
-}
-
-CONTAIN=			# Default: Don't run in container
-check_build_deps mmdebstrap || CONTAIN=./contain
-
 OUTDIR=$(dirname "$OUT")
 [ -d "$OUTDIR" ] || mkdir -p "$OUTDIR"
-rootfs="$OUTDIR"/rootfs
+ROOTAR="$OUTDIR"/tmproot.tar
 
 ### Collect root password
 if [[ -r ${CONFIG}/pw.root ]]; then
     PW_ROOT="$(cat "${CONFIG}/pw.root")"
 else
+    # NOTE: Doesn't work in ./contain
+    # TODO: Detect non-interactive container and bail
     read -rs -p "Root password to set in image: " PW_ROOT
     echo
 fi
 
 build_rootfs() {
-    mkdir -p "$rootfs"
-
     ### Build APT sources.list
     sources_list="$OUTDIR"/sources.list
     case "$DEBIAN_RELEASE" in	# https://wiki.debian.org/SourcesList
@@ -52,21 +42,25 @@ EOF
     esac
 
     ### Run mmdebstrap
-    # TODO: use $APT_CACHER_NG for local proxy, add
-    #     --aptopt='Acquire::http { Proxy "http://localhost:3142"; }' \
-    verbosity=			# empty, --silent or --verbose
-    mmdebstrap_flags="
-	"$verbosity"
-	--architectures=amd64
-	--variant=minbase
+    # TODO: use $APT_CACHER_NG for local proxy, add --aptopt and use http
+    #     --aptopt='Acquire::http { Proxy "http://localhost:3142"; }'
+    mmdebstrap_includes="
 	--include=$(grep -E -v '^[[:space:]]*#|^[[:space:]]*$' ${PKGLIST_BASE} | tr '\n' ',')"
     if [ -f ${CONFIG}/pkgs/${FLAVOUR}.pkglist ]; then
-	mmdebstrap_flags+=" --include=$(grep -E -v '^[[:space:]]*#|^[[:space:]]*$' ${CONFIG}/pkgs/${FLAVOUR}.pkglist | tr '\n' ',')"
+	mmdebstrap_includes+=" --include=$(grep -E -v '^[[:space:]]*#|^[[:space:]]*$' ${CONFIG}/pkgs/${FLAVOUR}.pkglist | tr '\n' ',')"
     fi
-
     echo "$0: running mmdebstrap, will take a minute or two"
-    echo "$0: if mmdebstrap prints a warning about unshare failing (Operation not permitted), that can be ignored"
-    $CONTAIN mmdebstrap --mode sudo $mmdebstrap_flags $DEBIAN_RELEASE $rootfs $sources_list
+    mmdebstrap --mode fakeroot --format tar --architectures=amd64 --variant=minbase     \
+               --customize-hook="download /vmlinuz $OUTDIR/vmlinuz"                     \
+               --customize-hook="sync-in ${CONFIG}/overlays/${FLAVOUR} /"               \
+               --customize-hook="$CONFIG/scripts/setup.sh \$1 $CONFIG"                  \
+               --customize-hook="copy-in $CONFIG/scripts/setup-in-chroot.sh /tmp/"      \
+               --customize-hook="chroot \$1 /tmp/setup-in-chroot.sh"                    \
+               --customize-hook="echo \"root:${PW_ROOT}\" | chroot \$1 chpasswd"        \
+               $mmdebstrap_includes                                                     \
+               $DEBIAN_RELEASE                                                          \
+               $ROOTAR                                                                  \
+               $sources_list
     rm "$sources_list"
 }
 
@@ -76,46 +70,27 @@ copy_kernel() {
 	echo "$0: copy kernel to rootfs NYI"
 	exit 1
     else
-	cp -v "$rootfs/boot/vmlinuz-"* "$OUTDIR"/
-	src="$(cd "${OUTDIR}" && ls vmlinuz-* | tail -1)"
 	tgt="$(basename "$OUT" .cpio.gz)".vmlinuz
-	ln -sfv "${src}" "${OUTDIR}/${tgt}"
+	ln -sf vmlinuz "${OUTDIR}/${tgt}"
     fi
 }
 	
-configure_rootfs() {
-    ### Configure rootfs (TODO: use mmdebstrap hooks instead)
-    if [ -d "${CONFIG}"/overlays/"${FLAVOUR}" ]; then
-	sudo cp -r --no-dereference --preserve=links,mode,timestamps "${CONFIG}"/overlays/"${FLAVOUR}"/* "$rootfs"/
-    fi
-    if [ -x "$CONFIG"/scripts/setup.sh ]; then
-	sudo "$CONFIG"/scripts/setup.sh "$rootfs" "$CONFIG"
-    fi
-    if [ -x "$CONFIG"/scripts/setup-in-chroot.sh ]; then
-	cp "$CONFIG"/scripts/setup-in-chroot.sh "$rootfs"/tmp/
-	sudo chroot $rootfs /tmp/setup-in-chroot.sh
-	rm "$rootfs"/tmp/setup-in-chroot.sh
-    fi
-    sudo chroot "$rootfs" /bin/bash -c "echo \"root:${PW_ROOT}\" | chpasswd"
-    if [ -x "$CONFIG"/scripts/cleanup.sh ]; then
-	sudo "$CONFIG"/scripts/cleanup.sh "$rootfs"
-    fi
-}
-
 create_cpio_archive() {
     ### Create cpio archive
     # TODO: prepend cpio archive with /kernel/x86/microcode/GenuineIntel.bin containing /lib/firmware/intel-ucode/* to $OUT, for targeting real hw
     # NOTE: If mmdebstrap was run in a container, cpio needs to be run in a container because file ownership.
     cat >"$OUTDIR"/mkcpio.sh <<EOF
 set -eu
-(cd $rootfs && find . | LC_ALL=C sort | cpio --quiet -o -H newc | pigz) > "$OUT"
+mkdir "${OUTDIR}"/tmproot
+tar x -C "${OUTDIR}"/tmproot --numeric-owner -f "$ROOTAR"
+(cd "${OUTDIR}"/tmproot && find . -depth | LC_ALL=C sort | cpio -o -H newc --quiet)
+rm -r "$OUTDIR"/tmproot
 EOF
-    $CONTAIN sudo /bin/bash "$OUTDIR"/mkcpio.sh
-    rm "$OUTDIR"/mkcpio.sh
+    fakeroot -- bash "$OUTDIR"/mkcpio.sh | gzip > "$OUT"
+    rm -r "$OUTDIR"/mkcpio.sh
 }
 
 ####################
-[ -d "$rootfs" ] || build_rootfs
+build_rootfs
 copy_kernel
-configure_rootfs
 create_cpio_archive
