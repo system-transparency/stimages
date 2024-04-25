@@ -24,6 +24,9 @@ if [ -v container ]; then
     cd /c
 fi
 
+echo "HERE"
+sleep 3
+
 ## project/docs/content/docs/introduction/build.md
 ### Prepare for building
 [ -z "$(command -v go)" ] && sudo apt install -y golang-go
@@ -35,9 +38,12 @@ fi
 find /usr/lib* -name libsystemd-shared\*.so -quit || sudo apt install -y libsystemd-shared
 #[ ! -e FIXME ] && sudo apt install -y man-db
 
+STIMAGESVER=rgdd/bump-versions
 git clone -b "$STIMAGESVER" https://git.glasklar.is/system-transparency/core/stimages.git
 pushd stimages
 [ -v container ] || trap popd EXIT
+echo "BRANCH"
+git branch && sleep 3
 
 mkdir -p go/bin; GOBIN="$(realpath go/bin)"; export GOBIN
 export PATH="$GOBIN":"$PATH"
