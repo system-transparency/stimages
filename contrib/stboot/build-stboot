@@ -6,8 +6,8 @@ ROOTCERT="$1"; shift
 [ $# -gt 0 ] && { FORMAT="$1"; shift; }
 [ $# -gt 0 ] && { OUT="$1"; shift; }
 
-STBOOT_VERSION=${STBOOT_VERSION-v0.3.4}
-STMGR_VERSION=${STMGR_VERSION-latest}
+STBOOT_VERSION=${STBOOT_VERSION-v0.3.5}
+STMGR_VERSION=${STMGR_VERSION-v0.3.2}
 
 FORMAT=${FORMAT-iso}
 OUT=${OUT-stboot.$FORMAT}

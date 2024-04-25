@@ -41,7 +41,7 @@ pushd stimages
 
 mkdir -p go/bin; GOBIN="$(realpath go/bin)"; export GOBIN
 export PATH="$GOBIN":"$PATH"
-go install system-transparency.org/stmgr@v0.3.1
+go install system-transparency.org/stmgr@v0.3.2
 
 (umask 0077 && mkdir keys)
 (cd keys && stmgr keygen certificate --isCA)
