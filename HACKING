@@ -47,10 +47,7 @@ Example tagging stimages-0.0.6:
     TMPDIR=$HOME/tmp test/getting-started.sh releng-$XYZ $STMGR_VERSION
 - verify that the following CI/CD jobs were successful
   - stimages
-    - NOTE: job boot-example times out without this being a real problem with the produced images
-      stboot: 2024/05/07 12:45:19 [INFO] Processing OS package "stimage.zip"
-      stboot: 2024/05/07 12:45:25 [ERROR] Not enough valid signatures: 1 found, 0 valid, 1 required
-      stboot: 2024/05/07 12:45:25 [ERROR] boot failed
+    - NOTE: job boot-example times out without this being a real problem with the produced images, cf. https://git.glasklar.is/system-transparency/core/stimages/-/issues/11
   - qa-images
 - qa-images: merge to main in order to trigger updates to st.glasklar.is/st/qa/
 - manually publish stboot images on https://st.glasklar.is/st/qa/
