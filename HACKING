@@ -8,3 +8,64 @@
 Example tagging stimages-0.0.6:
 
     $ export T=stimages-0.0.6; git tag -sam $T $T && git push && git push --tags
+
+
+# Releasing stimages, crude sketch
+- export XYZ=<stimages version to release> STMGR_VERSION=<stmgr version to use>
+- git branch releng-$XYZ; git switch releng-$XYZ
+- bump stmgr version in
+  - .gitlab-ci.yml
+  - build-stmgr
+  - contrib/stboot/build-stboot
+- bump stboot version in
+  - contrib/stboot/build-stboot
+- trigger CI/CD job
+  - git push origin
+- try using stimages branch releng-$XYZ in qa-images
+  - pushd /path/to/project/qa-images; git branch releng-010; git switch releng-010
+  - $EDITOR .gitlab-ci.yml: set STIMAGES_VERSION to releng-$XYZ
+  - $EDITOR .gitlab-ci.yml; set STMGR_VERSION
+  - git push origin
+  - popd
+- make sure that project/docs refer to stimages-X.Y.Z and correct stmgr version
+  - project/docs/content/docs/introduction/quickstart.md: PATH for downloading stboot contains releases/X.Y.Z
+  - project/docs/content/docs/introduction/build.md: fix all references to stimages-X.Y.Z
+  - project/docs/content/docs/introduction/build.md: update the stmgr version in the go install command
+- synchronize test/getting-started.sh and project/docs/content/docs/introduction/build.md
+- run test/getting-started.sh in a fresh Debian 12 system
+  - env QEMU_RAM=8G make distclean boot
+    root
+    myrootpassword
+    systemctl start systemd-networkd
+    apt update; apt install -y git
+    useradd -G sudo -d /dev/shm -s /bin/bash build
+    passwd build
+    sudo -iu build
+    mkdir tmp
+    git clone -b releng-$XYZ https://git.glasklar.is/system-transparency/core/stimages.git
+    cd stimages
+    TMPDIR=$HOME/tmp test/getting-started.sh releng-$XYZ $STMGR_VERSION
+- verify that the following CI/CD jobs were successful
+  - stimages
+    - NOTE: job boot-example times out without this being a real problem with the produced images
+      stboot: 2024/05/07 12:45:19 [INFO] Processing OS package "stimage.zip"
+      stboot: 2024/05/07 12:45:25 [ERROR] Not enough valid signatures: 1 found, 0 valid, 1 required
+      stboot: 2024/05/07 12:45:25 [ERROR] boot failed
+  - qa-images
+- qa-images: merge to main in order to trigger updates to st.glasklar.is/st/qa/
+- manually publish stboot images on https://st.glasklar.is/st/qa/
+- wait for the signed ST image to appear on https://st.glasklar.is/st/qa/
+- verify that the instructions in project/docs/content/docs/introduction/quickstart.md result in
+  - https://st.glasklar.is/st/qa/qa-stboot-amd64.iso.sig verifies the ISO
+  - https://st.glasklar.is/st/qa/qa-stboot-amd64.iso.asc verifies the ISO
+  - https://st.glasklar.is/st/qa/qa-stboot-amd64.uki.sig verifies the UKI
+  - https://st.glasklar.is/st/qa/qa-stboot-amd64.uki.asc verifies the UKI
+  - https://st.glasklar.is/st/qa/qa-stboot-amd64.iso is booting in QEMU
+  - https://st.glasklar.is/st/qa/qa-stboot-amd64.iso is booting on stime
+  - https://st.glasklar.is/st/qa/qa-stboot-amd64.uki is booting on stime
+- merge to main
+- (export T=stimages-$XYZ; git tag -sam $T $T && git push && git push --tags)
+
+A NOTE about qa-images: Nobody's using the images published in the package registry AFAIK, so these steps can be skipped:
+- tag new qa-images: set STIMAGES_VERSION to stimages-X.Y.Z in .gitlab-ci.yml, tag and push
+- verify latest https://git.glasklar.is/system-transparency/project/qa-images/-/packages
