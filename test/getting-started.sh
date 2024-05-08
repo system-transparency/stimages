@@ -14,8 +14,10 @@ set -eu
 # Usage, running in a podman container:
 #   podman run -it --rm -v "$PWD:/c" debian:bookworm /c/test/getting-started.sh
 
-[ $# -gt 0 ] && { STIMAGESVER="$1"; shift; }
+[ $# -gt 0 ] && { STIMAGESVER="$1"; shift; } # git clone -b
 STIMAGESVER=${STIMAGESVER-main}
+[ $# -gt 0 ] && { STMGRVER="$1"; shift; } # go install @
+STMGRVER=${STMGRVER-latest}
 
 if [ -v container ]; then
     trap bash EXIT
@@ -46,7 +48,7 @@ pushd stimages
 
 mkdir -p go/bin; GOBIN="$(realpath go/bin)"; export GOBIN
 export PATH="$GOBIN":"$PATH"
-go install system-transparency.org/stmgr@v0.3.1
+go install system-transparency.org/stmgr@"$STMGRVER"
 
 (umask 0077 && mkdir keys)
 (cd keys && stmgr keygen certificate --isCA)
