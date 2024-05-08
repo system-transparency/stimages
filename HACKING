@@ -5,6 +5,6 @@
 
 # Tagging
 
-Example tagging v0.0.6:
+Example tagging stimages-0.0.6:
 
-    $ export T=v0.0.6; git tag -sam $T $T && git push && git push --tags
+    $ export T=stimages-0.0.6; git tag -sam $T $T && git push && git push --tags
