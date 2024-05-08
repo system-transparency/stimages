@@ -4,6 +4,8 @@
 Description=ST signer daemon
 
 [Service]
+Type=exec
+Restart=on-failure
 ExecStart=/usr/bin/stsignd
 
 [Install]

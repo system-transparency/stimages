@@ -1,6 +1,6 @@
 #! /bin/bash
 #
-# Daemon signing ST OS images downloaded from GitLab CI/CD and upload
+# Program signing ST OS images downloaded from GitLab CI/CD and uploading
 # them to an image server.
 #
 # Configuration is read from ~/.config/stsignd/config and ~/.config/stsignd/jobs/*.{conf,keys}
