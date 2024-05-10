@@ -1,6 +1,8 @@
 #! /bin/bash
 set -eu
 
+[ $# -gt 1 ] || { echo "Usage: $0 OSPKG-POINTER ROOT-CERT [FORMAT [OUTPUT]]"; exit 1; }
+
 STIMAGE_JSON_URL="$1"; shift
 ROOTCERT="$1"; shift
 [ $# -gt 0 ] && { FORMAT="$1"; shift; }
