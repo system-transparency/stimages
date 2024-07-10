@@ -75,7 +75,7 @@ stmgr ospkg sign \
 	  --ospkg my-os
 
 ## Boot the OS package
-(for e in json zip; do nc -lc "printf 'HTTP/1.1 200 OK\n\n'; cat my-os.$e" 0.0.0.0 8080; done) &
+(for e in json zip; do ncat -lc "printf 'HTTP/1.1 200 OK\n\n'; cat my-os.$e" 0.0.0.0 8080; done) &
 cp /usr/share/OVMF/OVMF_VARS.fd OVMF_VARS.fd
 qemu-system-x86_64 \
         -m 3G \
