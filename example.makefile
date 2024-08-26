@@ -93,7 +93,7 @@ endif
 # Unable to get -nic 'user,guestfwd=tcp:10.0.2.2:8080-cmd:./serve-stimage.sh $(BUILD) $(STIMAGE_NAME)' to work with qemu-x86_64 version 7.2.7 (qemu-7.2.7-1.fc38)
 wwworkaround: $(STIMAGE)
 	(for e in json zip; do \
-		nc -lc "printf 'HTTP/1.1 200 OK\n\n'; cat $(BUILD)/$(STIMAGE_NAME).$$e" 0.0.0.0 8080; \
+		ncat -lc "printf 'HTTP/1.1 200 OK\n\n'; cat $(BUILD)/$(STIMAGE_NAME).$$e" 0.0.0.0 8080; \
 	done) &
 
 $(GUEST_DATADIR)/$(GUEST_NAME):
