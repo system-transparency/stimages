@@ -107,14 +107,18 @@ sign_and_upload() {
     cd "$cwd"
 }
 
+cleanup() {
+    local t="$1"; shift
+    [ -d "$t" ] && rm -rf "$t"
+}
+
 main() {
-    trap 'rm -rf "$dir"' EXIT
+    trap 'cleanup "${dir-}"' EXIT
     mkdir -p ~/.local/state/stsignd
 
     while true; do
 	if [[ -f ~/.config/stsignd/config && -d ~/.config/stsignd/jobs ]]; then
 	    for jobconf in ~/.config/stsignd/jobs/*.conf; do
-		[ -n "${dir-}" ] && rm -rf "$dir"
 		job="$(basename "$jobconf" .conf)"
 
 		# shellcheck disable=SC2034
@@ -132,6 +136,7 @@ main() {
 		download "${download_url_template-localhost}" "${dir}"/dl.zip "${job}" || continue
 
 		sign_and_upload "$dir"/dl.zip "$ulspec" "${keys[@]}"
+		cleanup "$dir"
 	    done
 	fi
 	sleep "${sleep_between_runs-5m}"
