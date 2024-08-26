@@ -32,6 +32,8 @@ download() {
     [[ -f "$statefile" ]] || touch "$statefile"
     read -r length lastmod <<< "$(<"$statefile")"
 
+    # TODO: Use ETag header instead of content-length and last-modified?
+
     read -r response_code new_length new_lastmod <<< \
 	 "$(curl --silent --location \
 	 	 --write-out '%{response_code} %header{content-length} %header{last-modified}' \
