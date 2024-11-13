@@ -14,6 +14,20 @@ DISPLAY_MODE=${DISPLAY_MODE--nographic} # If console=ttyS0,115200: '-nographic';
 OVMF_CODE=${OVMF_CODE-/usr/share/OVMF/OVMF_CODE.fd}
 
 do_boot() {
+    if [[ -v DISABLE_TPM ]]; then
+      if [ ! -d "/tmp/mytpm1" ]; then
+        mkdir -p /tmp/mytpm1/localca
+        TPM_STATE_PATH=/tmp/mytpm1 TPM_CONFIG_PATH=$(pwd)/contrib/stvmm swtpm_setup --tpm2 \
+          --createek --create-ek-cert \
+          --tpmstate /tmp/mytpm1 --config contrib/stvmm/swtpm_setup.conf
+      fi
+      swtpm socket --tpmstate dir=/tmp/mytpm1 \
+        --ctrl type=unixio,path=/tmp/mytpm1/swtpm-sock \
+        --tpm2 \
+        --log level=20 --daemon --pid file=/tmp/mytpm1/swtpm-sock.pid
+      TPM_DEV="-chardev socket,id=chrtpm,path=/tmp/mytpm1/swtpm-sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0"
+    fi
+
     qemu-system-x86_64 \
 	-accel kvm \
 	-accel tcg \
