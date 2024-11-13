@@ -51,8 +51,8 @@ EOF
     fi
     echo "$0: running mmdebstrap, will take a minute or two"
     mmdebstrap --mode fakeroot --format tar --architectures=amd64 --variant=minbase     \
-               --customize-hook="download /vmlinuz $OUTDIR/vmlinuz"                     \
                --customize-hook="sync-in ${CONFIG}/overlays/${FLAVOUR} /"               \
+               --customize-hook="download /vmlinuz $OUTDIR/vmlinuz"                     \
                --customize-hook="$CONFIG/scripts/setup.sh \$1 $CONFIG"                  \
                --customize-hook="copy-in $CONFIG/scripts/setup-in-chroot.sh /tmp/"      \
                --customize-hook="chroot \$1 /tmp/setup-in-chroot.sh"                    \
