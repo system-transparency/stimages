@@ -28,7 +28,8 @@ do_boot() {
 	"$DISPLAY_MODE" \
 	$QEMU_STDATA_DRIVE \
 	-drive file="$STBOOT_ISO",format=raw,if=none,media=cdrom,id=drive-cd1,readonly=on \
-	-device ahci,id=ahci0 -device ide-cd,bus=ahci0.0,drive=drive-cd1,id=cd1,bootindex=1
+	-device ahci,id=ahci0 -device ide-cd,bus=ahci0.0,drive=drive-cd1,id=cd1,bootindex=1 \
+	-cpu host,vmx=on
 }
 
 do_boot
