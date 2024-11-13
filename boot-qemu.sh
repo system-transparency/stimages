@@ -29,7 +29,9 @@ do_boot() {
 	$QEMU_STDATA_DRIVE \
 	-drive file="$STBOOT_ISO",format=raw,if=none,media=cdrom,id=drive-cd1,readonly=on \
 	-device ahci,id=ahci0 -device ide-cd,bus=ahci0.0,drive=drive-cd1,id=cd1,bootindex=1 \
-	-cpu host,vmx=on
+	-cpu host,vmx=on \
+	-netdev user,id=net0,net=10.0.2.0/24,dhcpstart=10.0.2.15,dns=8.8.8.8,hostfwd=tcp::2222-:22 \
+	-device virtio-net-pci,netdev=net0,mac=52:54:00:12:34:56
 }
 
 do_boot
