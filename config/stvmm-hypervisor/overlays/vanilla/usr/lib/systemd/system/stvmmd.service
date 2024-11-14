@@ -1,0 +1,14 @@
+[Unit]
+Description=System Transparency Virtual Machine Manager Daemon
+After=network.target,systemd-modules-load.service
+Wants=network.target,systemd-modules-load.service
+After=dev-net-tun.device,dev-kvm.device
+Requires=dev-net-tun.device,dev-kvm.device
+
+[Service]
+Type=idle
+ExecStart=/usr/sbin/stvmmd daemon --port 8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

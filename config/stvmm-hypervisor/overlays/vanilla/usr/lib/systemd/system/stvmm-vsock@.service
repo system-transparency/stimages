@@ -1,0 +1,6 @@
+[Unit]
+Description=System Transparency Virtual Machine %I vsock server
+
+[Service]
+ExecStart=/usr/sbin/stvmmd receive
+

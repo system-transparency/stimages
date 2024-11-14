@@ -1,0 +1,11 @@
+[Unit]
+Description=System Transparency Virtual Machine %I vsock server
+Before=stvmm-firecracker@%i.service
+Requires=stvmm-firecracker@%i.service
+Requires=stvmm-firecracker@%i.service
+
+[Socket]
+ListenStream=/var/lib/stvmm/%i.vsock_1234
+
+[Install]
+WantedBy=sockets.target
