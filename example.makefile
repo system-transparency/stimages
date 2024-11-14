@@ -31,6 +31,7 @@ CA = keys/rootcert.pem keys/rootkey.pem
 KEYS = keys/cert.pem keys/key.pem
 STBOOT_ISO = $(BUILD)/stboot.iso
 STBOOT_UKI = $(BUILD)/stboot.uki
+STBOOT_FULL = $(BUILD)/stboot.endorsement.bin
 
 ####################
 all: stimage
@@ -38,8 +39,9 @@ stimage: $(STIMAGE)
 kernel: $(KERNEL)
 cmdline: $(CMDLINE)
 initramfs: $(INITRAMFS)
-stboot-iso stboot: $(STBOOT_ISO)
+stboot-iso: $(STBOOT_ISO)
 stboot-uki: $(STBOOT_UKI)
+stboot: $(STBOOT_FULL)
 boot: boot-qemu
 clean:
 	$(CONTAIN) rm -rf $(BUILD)
@@ -62,6 +64,8 @@ $(CMDLINE):
 $(INITRAMFS): $(CONFIG)/pkgs/000base.pkglist
 	$(CONTAIN) ./build-initramfs $(CONFIG) $@ $(FLAVOUR)
 
+$(STBOOT_FULL): keys/rootcert.pem
+	./contrib/stboot/build-stboot $(NETBOOT_URL).json $< iso,uki $@
 $(STBOOT_ISO): keys/rootcert.pem
 	./contrib/stboot/build-stboot $(NETBOOT_URL).json $< iso $@
 $(STBOOT_UKI): keys/rootcert.pem

@@ -10,6 +10,7 @@ ROOTCERT="$1"; shift
 
 STBOOT_VERSION=${STBOOT_VERSION-v0.4.3}
 STMGR_VERSION=${STMGR_VERSION-v0.4.1}
+STBOOT_KERNEL=${STBOOT_KERNEL-linuxboot.vmlinuz}
 
 FORMAT=${FORMAT-iso}
 OUT=${OUT-stboot.$FORMAT}
@@ -35,12 +36,21 @@ install_dependencies() {
 }    
 
 create_default_stboot_config() {
+    # stboot v0.3 requires additional fields in host_config.json
+    if [[ "${STBOOT_VERSION}" == "v0.3"* ]]; then
+      HC_V03="
+        \"identity\":null,
+        \"authentication\":null,
+        \"timestamp\":null,"
+    fi
+
     HC="{
       \"network_mode\": \"dhcp\",
       \"host_ip\": null,
       \"gateway\": null,
       \"dns\": null,
       \"network_interfaces\": null,
+      ${HC_V03:-}
       \"ospkg_pointer\": \"${STIMAGE_JSON_URL}\",
       \"bonding_mode\": null,
       \"bond_name\": \"\"
@@ -53,13 +63,20 @@ create_default_stboot_config() {
       "ospkg_fetch_method": "network"
     }
     ' > "${IDIR}"/trust_policy.json
-}    
+}
 
 uroot_files="
 	${ROOTCERT}:etc/trust_policy/ospkg_signing_root.pem
 	contrib/stboot/isrgrootx1.pem:etc/trust_policy/tls_roots.pem
 	${IDIR}/host_config.json:etc/host_configuration.json
 	${IDIR}/trust_policy.json:etc/trust_policy/trust_policy.json"
+
+# stboot v0.3 requires additional files in the initramfs
+if [[ "${STBOOT_VERSION}" == "v0.3"* ]]; then
+  uroot_files="
+    $uroot_files
+    contrib/stboot/isrgrootx1.pem:etc/ssl/certs/isrgrootx1.pem"
+fi
 
 build_archive() {
     local out="$1"; shift
@@ -90,12 +107,25 @@ create_img() {
     stmgr uki create \
 	  -format "$FORMAT" \
 	  -out "$OUT" \
-	  -kernel "contrib/stboot/linuxboot.vmlinuz" \
-	  -cmdline console=ttyS0,115200 \
+	  -kernel "contrib/stboot/${STBOOT_KERNEL}" \
+    -cmdline "console=ttyS0,115200" \
 	  -initramfs "${IDIR}"/stboot.cpio.gz
+}
+
+endorse_img() {
+  which ra || { echo "ra not found"; return 1; }
+
+  ra endorse \
+    -key contrib/endorsement-signing.key \
+    -stboot "${OUT}.uki" \
+    -trust-policy "${IDIR}/trust_policy.json" \
+    -https-roots "contrib/stboot/isrgrootx1.pem" \
+    -root-ca "${ROOTCERT}" \
+    -out "${OUT}.endorsement"
 }
 
 install_dependencies
 create_default_stboot_config
 build_archive "${IDIR}"/stboot.cpio.gz $uroot_files
 create_img
+endorse_img

@@ -27,6 +27,15 @@ create_image() {
 	  --url="$NETBOOT_URL"
 }
 
+endorse_image() {
+    if command -v ra &>/dev/null; then
+      ra endorse \
+        -key contrib/endorsement-signing.key \
+        -ospkg "$OUT" \
+        -out "${OUT}.endorsement"
+    fi
+}
+
 sign_image() {
     local certs=()
     local keys=()
@@ -60,3 +69,4 @@ ensure_stmgr
 create_image
 sign_image $@
 chmod_image
+endorse_image
