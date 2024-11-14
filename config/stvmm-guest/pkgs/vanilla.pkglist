@@ -1,0 +1,15 @@
+sudo
+dbus
+lshw
+util-linux
+bash
+pciutils
+isc-dhcp-client
+udev
+vim
+openssh-server
+systemd
+iputils-ping
+curl
+bind9-dnsutils
+socat

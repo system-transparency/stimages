@@ -1,0 +1,16 @@
+[Unit]
+Description=System Transparency Virtual Machine %I
+AssertPathExists=/var/lib/stvmm/%i.json
+After=stvmm-guest-network@%i.service
+Wants=stvmm-guest-network@%i.service
+
+[Service]
+RuntimeDirectory=stvmm/%i
+LogsDirectory=stvmm/%i
+Type=idle
+ExecStartPre=touch ${LOGS_DIRECTORY}/firecracker.log
+ExecStart=/usr/local/bin/firecracker \
+  --id %i \
+  --config-file /var/lib/stvmm/%i.json \
+  --api-sock ${RUNTIME_DIRECTORY}/api.sock \
+  --log-path ${LOGS_DIRECTORY}/firecracker.log
