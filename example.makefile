@@ -65,7 +65,7 @@ $(INITRAMFS): $(CONFIG)/pkgs/000base.pkglist
 	$(CONTAIN) ./build-initramfs $(CONFIG) $@ $(FLAVOUR)
 
 $(STBOOT_FULL): keys/rootcert.pem
-	./contrib/stboot/build-stboot $(NETBOOT_URL).json $< iso,uki $@
+	./contrib/stboot/build-stboot $(NETBOOT_URL).json $< iso,uki build/stboot.iso
 $(STBOOT_ISO): keys/rootcert.pem
 	./contrib/stboot/build-stboot $(NETBOOT_URL).json $< iso $@
 $(STBOOT_UKI): keys/rootcert.pem
@@ -74,11 +74,11 @@ $(STBOOT_UKI): keys/rootcert.pem
 ####################
 keys/rootcert.pem keys/rootkey.pem:
 	(umask 0077 && mkdir -p keys)
-	(cd keys && stmgr keygen certificate --isCA)
+	(cd keys && stmgr keygen certificate --isCA --validUntil 2099-01-01T00:00:00Z)
 
 keys/cert.pem keys/key.pem:
 	$(MAKE) keys/rootcert.pem
-	(cd keys && stmgr keygen certificate --rootCert rootcert.pem --rootKey rootkey.pem)
+	(cd keys && stmgr keygen certificate --rootCert rootcert.pem --rootKey rootkey.pem --validUntil 2099-01-01T00:00:00Z)
 
 ####################
 GUEST_DATADIR ?= hosts
@@ -110,6 +110,9 @@ $(GUEST_STDATA): $(GUEST_DATADIR)/$(GUEST_NAME)
 	./mkstdata.sh $@ $(GUEST_NAME) -dhcp
 
 boot-qemu: $(STBOOT_ISO) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA) wwworkaround
+	./boot-qemu.sh "$(STBOOT_ISO)" "$(GUEST_OVMF_VARS)" "$(QEMU_STDATA_DRIVE)"
+
+boot-stvmm: $(STBOOT_FULL) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA)
 	./boot-qemu.sh "$(STBOOT_ISO)" "$(GUEST_OVMF_VARS)" "$(QEMU_STDATA_DRIVE)"
 
 .PHONY: wwworkaround boot-qemu
