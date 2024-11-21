@@ -39,9 +39,9 @@ stimage: $(STIMAGE)
 kernel: $(KERNEL)
 cmdline: $(CMDLINE)
 initramfs: $(INITRAMFS)
-stboot-iso: $(STBOOT_ISO)
+stboot-iso stboot: $(STBOOT_ISO)
 stboot-uki: $(STBOOT_UKI)
-stboot: $(STBOOT_FULL)
+stboot-ra: $(STBOOT_FULL)
 boot: boot-qemu
 clean:
 	$(CONTAIN) rm -rf $(BUILD)
