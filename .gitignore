@@ -3,3 +3,12 @@ config/example/pw.root
 go
 hosts
 keys
+
+config/stvmm-guest/overlay/vanilla/usr/sbin/ra
+config/stvmm-guest/overlay/vanilla/vmlinuz
+
+config/stvmm-hypervisor/overlay/vanilla/usr/sbin/ra
+config/stvmm-hypervisor/overlay/vanilla/usr/sbin/stv
+config/stvmm-hypervisor/overlay/vanilla/usr/sbin/stvmmd
+config/stvmm-hypervisor/overlay/vanilla/usr/sbin/firecracker
+config/stvmm-hypervisor/overlay/vanilla/usr/sbin/cloud-hypervisor
