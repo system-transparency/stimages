@@ -12,3 +12,5 @@ config/stvmm-hypervisor/overlay/vanilla/usr/sbin/stv
 config/stvmm-hypervisor/overlay/vanilla/usr/sbin/stvmmd
 config/stvmm-hypervisor/overlay/vanilla/usr/sbin/firecracker
 config/stvmm-hypervisor/overlay/vanilla/usr/sbin/cloud-hypervisor
+
+config/stvmm-*/pw.root
