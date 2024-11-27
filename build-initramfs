@@ -34,8 +34,8 @@ build_rootfs() {
 	    # NOTE: non-free-firmware for intel-microcode on physical machines
 	    DEBIAN_COMPONENTS="main non-free-firmware"
 	    cat >$sources_list <<EOF
-deb https://ftp.acc.umu.se/debian/          $DEBIAN_RELEASE          $DEBIAN_COMPONENTS
-deb https://ftp.acc.umu.se/debian/          $DEBIAN_RELEASE-updates  $DEBIAN_COMPONENTS
+deb https://deb.debian.org/debian/          $DEBIAN_RELEASE          $DEBIAN_COMPONENTS
+deb https://deb.debian.org/debian/          $DEBIAN_RELEASE-updates  $DEBIAN_COMPONENTS
 deb https://deb.debian.org/debian-security/ $DEBIAN_RELEASE-security $DEBIAN_COMPONENTS
 EOF
 	    ;;
@@ -50,17 +50,16 @@ EOF
 	mmdebstrap_includes+=" --include=$(grep -E -v '^[[:space:]]*#|^[[:space:]]*$' ${CONFIG}/pkgs/${FLAVOUR}.pkglist | tr '\n' ',')"
     fi
     echo "$0: running mmdebstrap, will take a minute or two"
-    mmdebstrap --mode fakeroot --format tar --architectures=amd64 --variant=minbase     \
-               --customize-hook="download /vmlinuz $OUTDIR/vmlinuz"                     \
+    mmdebstrap --format tar --architectures=amd64 --variant=minbase     \
                --customize-hook="sync-in ${CONFIG}/overlays/${FLAVOUR} /"               \
+               --customize-hook="download /vmlinuz $OUTDIR/vmlinuz"                     \
                --customize-hook="$CONFIG/scripts/setup.sh \$1 $CONFIG"                  \
                --customize-hook="copy-in $CONFIG/scripts/setup-in-chroot.sh /tmp/"      \
                --customize-hook="chroot \$1 /tmp/setup-in-chroot.sh"                    \
                --customize-hook="echo \"root:${PW_ROOT}\" | chroot \$1 chpasswd"        \
                $mmdebstrap_includes                                                     \
                $DEBIAN_RELEASE                                                          \
-               $ROOTAR                                                                  \
-               $sources_list
+               $ROOTAR
     rm "$sources_list"
 }
 
