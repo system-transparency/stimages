@@ -14,7 +14,7 @@ DISPLAY_MODE=${DISPLAY_MODE--nographic} # If console=ttyS0,115200: '-nographic';
 OVMF_CODE=${OVMF_CODE-/usr/share/OVMF/OVMF_CODE.fd}
 
 do_boot() {
-    if [[ -v DISABLE_TPM ]]; then
+    if [[ "$ENABLE_TPM" == "1" ]]; then
       if [ ! -d "/tmp/mytpm1" ]; then
         mkdir -p /tmp/mytpm1/localca
         TPM_STATE_PATH=/tmp/mytpm1 TPM_CONFIG_PATH=$(pwd)/contrib/stvmm swtpm_setup --tpm2 \
@@ -41,6 +41,7 @@ do_boot() {
 	-m "$QEMU_RAM" \
 	"$DISPLAY_MODE" \
 	$QEMU_STDATA_DRIVE \
+	$TPM_DEV \
 	-drive file="$STBOOT_ISO",format=raw,if=none,media=cdrom,id=drive-cd1,readonly=on \
 	-device ahci,id=ahci0 -device ide-cd,bus=ahci0.0,drive=drive-cd1,id=cd1,bootindex=1 \
 	-cpu host,vmx=on \
