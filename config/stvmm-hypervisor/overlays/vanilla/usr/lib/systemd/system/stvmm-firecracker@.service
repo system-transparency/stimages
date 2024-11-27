@@ -11,6 +11,7 @@ RuntimeDirectory=stvmm/%i
 LogsDirectory=stvmm/%i
 Type=idle
 ExecStartPre=touch ${LOGS_DIRECTORY}/firecracker.log
+#ExecStart=/usr/libexec/fc-ch-wrapper.sh /var/lib/stvmm/%i.json
 ExecStart=/usr/local/bin/firecracker \
   --id %i \
   --config-file /var/lib/stvmm/%i.json \

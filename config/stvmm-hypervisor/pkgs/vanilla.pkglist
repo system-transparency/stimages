@@ -3,3 +3,4 @@ ncat
 openssh-server
 tpm2-tools
 socat
+jq
