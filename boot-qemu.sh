@@ -13,6 +13,9 @@ QEMU_STDATA_DRIVE=${QEMU_STDATA_DRIVE-}
 DISPLAY_MODE=${DISPLAY_MODE--nographic} # If console=ttyS0,115200: '-nographic'; else '-display gtk'.
 OVMF_CODE=${OVMF_CODE-/usr/share/OVMF/OVMF_CODE.fd}
 
+ENABLE_TPM=${ENABLE_TPM-0}
+FORWARD_STVMM_API=${FORWARD_STVMM_API-0}
+
 do_boot() {
     if [[ "$ENABLE_TPM" == "1" ]]; then
       if [ ! -d "/tmp/mytpm1" ]; then
@@ -26,10 +29,14 @@ do_boot() {
         --tpm2 \
         --log level=20 --daemon --pid file=/tmp/mytpm1/swtpm-sock.pid
       TPM_DEV="-chardev socket,id=chrtpm,path=/tmp/mytpm1/swtpm-sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0"
+    else
+      TPM_DEV=""
     fi
 
     if [[ "$FORWARD_STVMM_API" == "1" ]]; then
       STVMM_FD=",hostfwd=tcp::8000-:8000"
+    else
+      STVMM_FD=""
     fi
 
     qemu-system-x86_64 \
