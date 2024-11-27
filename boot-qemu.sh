@@ -28,6 +28,10 @@ do_boot() {
       TPM_DEV="-chardev socket,id=chrtpm,path=/tmp/mytpm1/swtpm-sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0"
     fi
 
+    if [[ "$FORWARD_STVMM_API" == "1" ]]; then
+      STVMM_FD=",hostfwd=tcp::8000-:8000"
+    fi
+
     qemu-system-x86_64 \
 	-accel kvm \
 	-accel tcg \
@@ -45,7 +49,7 @@ do_boot() {
 	-drive file="$STBOOT_ISO",format=raw,if=none,media=cdrom,id=drive-cd1,readonly=on \
 	-device ahci,id=ahci0 -device ide-cd,bus=ahci0.0,drive=drive-cd1,id=cd1,bootindex=1 \
 	-cpu host,vmx=on \
-	-netdev user,id=net0,net=10.0.2.0/24,dhcpstart=10.0.2.15,dns=8.8.8.8,hostfwd=tcp::2222-:22 \
+	-netdev user,id=net0,net=10.0.2.0/24,dhcpstart=10.0.2.15,dns=8.8.8.8,hostfwd=tcp::2222-:22${STVMM_FD} \
 	-device virtio-net-pci,netdev=net0,mac=52:54:00:12:34:56
 }
 
