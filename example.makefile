@@ -112,7 +112,7 @@ $(GUEST_STDATA): $(GUEST_DATADIR)/$(GUEST_NAME)
 boot-qemu: $(STBOOT_ISO) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA) wwworkaround
 	./boot-qemu.sh "$(STBOOT_ISO)" "$(GUEST_OVMF_VARS)" "$(QEMU_STDATA_DRIVE)"
 
-boot-stvmm: $(STBOOT_FULL) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA)
+boot-stvmm: $(STBOOT_FULL) $(OVMF_CODE) $(GUEST_OVMF_VARS) $(GUEST_STDATA) wwworkaround
 	ENABLE_TPM=1 FORWARD_STVMM_API=1 ./boot-qemu.sh "$(STBOOT_ISO)" "$(GUEST_OVMF_VARS)" "$(QEMU_STDATA_DRIVE)"
 
 .PHONY: wwworkaround boot-qemu

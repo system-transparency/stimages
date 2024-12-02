@@ -8,7 +8,7 @@ GUEST_OVMF_VARS="$1"; shift
 [ $# -gt 0 ] && { DISPLAY_MODE="$1"; shift; }
 [ $# -gt 0 ] && { OVMF_CODE="$1"; shift; }
 
-QEMU_RAM=${QEMU_RAM-4G}
+QEMU_RAM=${QEMU_RAM-16G}
 QEMU_STDATA_DRIVE=${QEMU_STDATA_DRIVE-}
 DISPLAY_MODE=${DISPLAY_MODE--nographic} # If console=ttyS0,115200: '-nographic'; else '-display gtk'.
 OVMF_CODE=${OVMF_CODE-/usr/share/OVMF/OVMF_CODE.fd}
@@ -40,8 +40,6 @@ do_boot() {
     fi
 
     qemu-system-x86_64 \
-	-accel kvm \
-	-accel tcg \
 	-no-reboot \
 	-pidfile qemu.pid \
 	-drive if=pflash,format=raw,readonly=on,file="$OVMF_CODE" \
@@ -55,7 +53,6 @@ do_boot() {
 	$TPM_DEV \
 	-drive file="$STBOOT_ISO",format=raw,if=none,media=cdrom,id=drive-cd1,readonly=on \
 	-device ahci,id=ahci0 -device ide-cd,bus=ahci0.0,drive=drive-cd1,id=cd1,bootindex=1 \
-	-cpu host,vmx=on \
 	-netdev user,id=net0,net=10.0.2.0/24,dhcpstart=10.0.2.15,dns=8.8.8.8,hostfwd=tcp::2222-:22${STVMM_FD} \
 	-device virtio-net-pci,netdev=net0,mac=52:54:00:12:34:56
 }
