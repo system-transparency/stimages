@@ -30,7 +30,7 @@ download() {
     local lastmod new_lastmod
     local statefile="${STATE_DIR}/${id}"
     [[ -f "$statefile" ]] || touch "$statefile"
-    read -r length lastmod <<< "$(<"$statefile")"
+    read -r length lastmod < "$statefile"
 
     # TODO: Use ETag header instead of content-length and last-modified?
 
