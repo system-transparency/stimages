@@ -135,7 +135,7 @@ main() {
 
 		# shellcheck source=/dev/null
 		source ~/.config/stsignd/config # Substituting $proj and $job
-		download "${download_url_template-localhost}" "${dir}"/dl.zip "${job}" || continue
+		download "${download_url_template-localhost}" "${dir}"/dl.zip "${job}" || { cleanup "$dir"; continue; }
 
 		sign_and_upload "$dir"/dl.zip "$ulspec" "${keys[@]}"
 		cleanup "$dir"
