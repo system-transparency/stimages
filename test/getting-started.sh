@@ -12,7 +12,7 @@ set -eu
 # Usage:
 #   test/getting-started.sh && rm -irf stimages
 # Usage, running in a podman container:
-#   podman run -it --rm -v "$PWD:/c" debian:bookworm /c/test/getting-started.sh
+#   podman run -it --rm -v "$PWD:/c" debian:bookworm-backports /c/test/getting-started.sh
 
 [ $# -gt 0 ] && { STIMAGESVER="$1"; shift; } # git clone -b
 STIMAGESVER=${STIMAGESVER-main}
@@ -32,7 +32,7 @@ fi
 [ -z "$(command -v qemu-system-x86_64)" ] && sudo apt install -y qemu-system-x86 ovmf ncat
 
 ### Prepare for building
-[ -z "$(command -v go)" ] && sudo apt install -y golang-go
+[ -z "$(command -v go)" ] && sudo apt install -y golang-1.22-go && export PATH="/usr/lib/go-1.22/bin/:$PATH"
 [ -z "$(command -v update-ca-certificates)" ] && sudo apt install -y ca-certificates
 [ -z "$(command -v git)" ] && sudo apt install -y git
 [ -z "$(command -v cpio)" ] && sudo apt install -y cpio
