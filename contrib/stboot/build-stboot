@@ -91,7 +91,7 @@ create_img() {
 	  -format "$FORMAT" \
 	  -out "$OUT" \
 	  -kernel "contrib/stboot/linuxboot.vmlinuz" \
-	  -cmdline console=ttyS0,115200 \
+	  -cmdline "console=ttyS0,115200 -- --loglevel=debug" \
 	  -initramfs "${IDIR}"/stboot.cpio.gz
 }
 
