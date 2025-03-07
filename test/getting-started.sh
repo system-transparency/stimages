@@ -17,7 +17,7 @@ set -eu
 [ $# -gt 0 ] && { STIMAGESVER="$1"; shift; } # git clone -b
 STIMAGESVER=${STIMAGESVER-main}
 [ $# -gt 0 ] && { STMGRVER="$1"; shift; } # go install @
-STMGRVER=${STMGRVER-latest}
+STMGRVER=${STMGRVER-v0.5.1}
 
 if [ -v container ]; then
     trap bash EXIT
