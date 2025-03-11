@@ -13,7 +13,7 @@ INITRAMFS="$1"; shift		# Path to file with initramfs.
 
 ensure_stmgr() {
     local newpath
-    newpath="$("$(dirname $0)"/build-stmgr v0.5.1)"
+    newpath="$("$(dirname $0)"/build-stmgr v0.5.2)"
     [ $? -eq 0 ] && PATH="$newpath"
 }
 
