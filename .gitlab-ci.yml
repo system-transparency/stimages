@@ -1,5 +1,5 @@
 variables:
-  STMGR_VERSION: v0.3.3
+  STMGR_VERSION: v0.5.2
 
 stages:
   - build/1
@@ -10,13 +10,13 @@ build-example-os:
   stage: build/1
   tags:
     - longrunning
-  image: debian:bookworm
+  image: debian:bookworm-backports
   before_script:
     - apt-get -qq update
-    - apt-get install -qqy golang-1.19-go ca-certificates make cpio mmdebstrap libsystemd-shared
+    - apt-get install -qqy golang-1.22-go ca-certificates make cpio mmdebstrap libsystemd-shared
     - |
       export GOBIN="${PWD}"/.go/bin; mkdir -p "$GOBIN"
-      export PATH="${PATH}":/usr/lib/go-1.19/bin:"${GOBIN}"
+      export PATH="${PATH}":/usr/lib/go-1.22/bin:"${GOBIN}"
     - go install system-transparency.org/stmgr@"${STMGR_VERSION}"
   script:
     - echo stimages > config/example/pw.root # Default root password in OS image
@@ -32,13 +32,13 @@ build-example-os:
 # into the stboot binary.
 build-stboot:
   stage: build/2
-  image: debian:bookworm
+  image: debian:bookworm-backports
   before_script:
     - apt-get -qq update
-    - apt-get install -qqy golang-1.19-go ca-certificates pigz make cpio
+    - apt-get install -qqy golang-1.22-go ca-certificates pigz make cpio
     - |
       export GOBIN="${PWD}"/.go/bin; mkdir -p "$GOBIN"
-      export PATH="${PATH}":/usr/lib/go-1.19/bin:"${GOBIN}"
+      export PATH="${PATH}":/usr/lib/go-1.22/bin:"${GOBIN}"
     - go install system-transparency.org/stmgr@"${STMGR_VERSION}"
   script:
     - make stboot
@@ -54,7 +54,7 @@ boot-example:
   allow_failure: true
   tags:
     - longrunning
-  image: debian:bookworm
+  image: debian:bookworm-backports
   before_script:
     - apt-get -qq update
     - apt-get install -qqy make qemu-system-x86 ovmf ncat

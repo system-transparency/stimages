@@ -66,3 +66,4 @@ Example tagging stimages-0.0.6:
 A NOTE about qa-images: Nobody's using the images published in the package registry AFAIK, so these steps can be skipped:
 - tag new qa-images: set STIMAGES_VERSION to stimages-X.Y.Z in .gitlab-ci.yml, tag and push
 - verify latest https://git.glasklar.is/system-transparency/project/qa-images/-/packages
+

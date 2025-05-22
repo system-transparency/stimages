@@ -5,7 +5,7 @@ set -eu
 # Exit 0 if installed and 1 if not.
 # When exit 0, print PATH to use on stdout.
 
-STMGR_VERSION=v0.3.3
+STMGR_VERSION=v0.5.2
 
 printpathmaybe() {
     [[ $? -eq 0 ]] && echo "$PATH"

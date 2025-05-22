@@ -1,13 +1,15 @@
 #! /bin/bash
 set -eu
 
+[ $# -gt 1 ] || { echo "Usage: $0 OSPKG-POINTER ROOT-CERT [FORMAT [OUTPUT]]"; exit 1; }
+
 STIMAGE_JSON_URL="$1"; shift
 ROOTCERT="$1"; shift
 [ $# -gt 0 ] && { FORMAT="$1"; shift; }
 [ $# -gt 0 ] && { OUT="$1"; shift; }
 
-STBOOT_VERSION=${STBOOT_VERSION-v0.3.6}
-STMGR_VERSION=${STMGR_VERSION-v0.3.3}
+STBOOT_VERSION=${STBOOT_VERSION-v0.5.2}
+STMGR_VERSION=${STMGR_VERSION-v0.5.2}
 
 FORMAT=${FORMAT-iso}
 OUT=${OUT-stboot.$FORMAT}
@@ -89,7 +91,7 @@ create_img() {
 	  -format "$FORMAT" \
 	  -out "$OUT" \
 	  -kernel "contrib/stboot/linuxboot.vmlinuz" \
-	  -cmdline console=ttyS0,115200 \
+	  -cmdline "console=ttyS0,115200 -- --loglevel=debug" \
 	  -initramfs "${IDIR}"/stboot.cpio.gz
 }
 

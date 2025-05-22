@@ -30,7 +30,9 @@ download() {
     local lastmod new_lastmod
     local statefile="${STATE_DIR}/${id}"
     [[ -f "$statefile" ]] || touch "$statefile"
-    read -r length lastmod <<< "$(<"$statefile")"
+    read -r length lastmod < "$statefile"
+
+    # TODO: Use ETag header instead of content-length and last-modified?
 
     read -r response_code new_length new_lastmod <<< \
 	 "$(curl --silent --location \
@@ -107,14 +109,18 @@ sign_and_upload() {
     cd "$cwd"
 }
 
+cleanup() {
+    local t="$1"; shift
+    [ -d "$t" ] && rm -rf "$t"
+}
+
 main() {
-    trap 'rm -rf "$dir"' EXIT
+    trap 'cleanup "${dir-}"' EXIT
     mkdir -p ~/.local/state/stsignd
 
     while true; do
 	if [[ -f ~/.config/stsignd/config && -d ~/.config/stsignd/jobs ]]; then
 	    for jobconf in ~/.config/stsignd/jobs/*.conf; do
-		[ -n "${dir-}" ] && rm -rf "$dir"
 		job="$(basename "$jobconf" .conf)"
 
 		# shellcheck disable=SC2034
@@ -129,9 +135,10 @@ main() {
 
 		# shellcheck source=/dev/null
 		source ~/.config/stsignd/config # Substituting $proj and $job
-		download "${download_url_template-localhost}" "${dir}"/dl.zip "${job}" || continue
+		download "${download_url_template-localhost}" "${dir}"/dl.zip "${job}" || { cleanup "$dir"; continue; }
 
 		sign_and_upload "$dir"/dl.zip "$ulspec" "${keys[@]}"
+		cleanup "$dir"
 	    done
 	fi
 	sleep "${sleep_between_runs-5m}"
