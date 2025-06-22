@@ -13,10 +13,10 @@ build-example-os:
   image: debian:bookworm-backports
   before_script:
     - apt-get -qq update
-    - apt-get install -qqy golang-1.22-go ca-certificates make cpio mmdebstrap libsystemd-shared
+    - apt-get install -qqy golang-1.23-go ca-certificates make cpio mmdebstrap libsystemd-shared
     - |
       export GOBIN="${PWD}"/.go/bin; mkdir -p "$GOBIN"
-      export PATH="${PATH}":/usr/lib/go-1.22/bin:"${GOBIN}"
+      export PATH="${PATH}":/usr/lib/go-1.23/bin:"${GOBIN}"
     - go install system-transparency.org/stmgr@"${STMGR_VERSION}"
   script:
     - echo stimages > config/example/pw.root # Default root password in OS image
@@ -35,10 +35,10 @@ build-stboot:
   image: debian:bookworm-backports
   before_script:
     - apt-get -qq update
-    - apt-get install -qqy golang-1.22-go ca-certificates pigz make cpio
+    - apt-get install -qqy golang-1.23-go ca-certificates pigz make cpio
     - |
       export GOBIN="${PWD}"/.go/bin; mkdir -p "$GOBIN"
-      export PATH="${PATH}":/usr/lib/go-1.22/bin:"${GOBIN}"
+      export PATH="${PATH}":/usr/lib/go-1.23/bin:"${GOBIN}"
     - go install system-transparency.org/stmgr@"${STMGR_VERSION}"
   script:
     - make stboot
