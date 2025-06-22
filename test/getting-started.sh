@@ -17,7 +17,7 @@ set -eu
 [ $# -gt 0 ] && { STIMAGESVER="$1"; shift; } # git clone -b
 STIMAGESVER=${STIMAGESVER-main}
 [ $# -gt 0 ] && { STMGRVER="$1"; shift; } # go install @
-STMGRVER=${STMGRVER-v0.5.2}
+STMGRVER=${STMGRVER-v0.6.4}
 
 if [ -v container ]; then
     trap bash EXIT
@@ -32,7 +32,7 @@ fi
 [ -z "$(command -v qemu-system-x86_64)" ] && sudo apt install -y qemu-system-x86 ovmf ncat
 
 ### Prepare for building
-[ -z "$(command -v go)" ] && sudo apt install -y golang-1.22-go && export PATH="/usr/lib/go-1.22/bin/:$PATH"
+[ -z "$(command -v go)" ] && sudo apt install -y golang-1.23-go && export PATH="/usr/lib/go-1.23/bin/:$PATH"
 [ -z "$(command -v update-ca-certificates)" ] && sudo apt install -y ca-certificates
 [ -z "$(command -v git)" ] && sudo apt install -y git
 [ -z "$(command -v cpio)" ] && sudo apt install -y cpio
