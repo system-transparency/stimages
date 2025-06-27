@@ -1,5 +1,5 @@
 variables:
-  STMGR_VERSION: v0.6.5
+  STMGR_VERSION: v0.6.6
 
 stages:
   - build/1
