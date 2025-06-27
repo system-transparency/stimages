@@ -28,7 +28,7 @@ fi
 
 ## project/docs/content/docs/introduction/build.md
 
-### Prepare for booting in QEMU
+### Prepare for booting in an emulator
 [ -z "$(command -v qemu-system-x86_64)" ] && sudo apt install -y qemu-system-x86 ovmf ncat
 
 ### Prepare for building
@@ -54,7 +54,7 @@ go install system-transparency.org/stmgr@"$STMGRVER"
 (cd keys && stmgr keygen certificate --isCA)
 (cd keys && stmgr keygen certificate --rootCert rootcert.pem --rootKey rootkey.pem)
 
-## Build your own ST bootloader image
+## Build your own bootloader image
 contrib/stboot/build-stboot http://10.0.2.2:8080/my-os.json keys/rootcert.pem
 
 ## Build your own OS package
