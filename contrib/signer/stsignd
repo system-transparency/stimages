@@ -8,6 +8,8 @@
 #
 # NOTE: Uploads are not atomic (.zip before .json) so there's a window where stboot will fail validation
 #
+# See git repo https://git.glasklar.is/system-transparency/core/stimages
+#
 set -eu
 
 STATE_DIR=~/.local/state/stsignd

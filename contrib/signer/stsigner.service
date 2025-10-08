@@ -1,5 +1,7 @@
 # ~/.config/systemd/user/stsigner.service
 
+# See git repo https://git.glasklar.is/system-transparency/core/stimages
+
 [Unit]
 Description=ST signer daemon
 
