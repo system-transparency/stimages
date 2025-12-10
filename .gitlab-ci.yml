@@ -59,7 +59,7 @@ boot-example:
     - apt-get -qq update
     - apt-get install -qqy make qemu-system-x86 ovmf ncat
   script:
-    - cp /usr/share/OVMF/OVMF_VARS.fd guest_nvram
+    - cp /usr/share/OVMF/OVMF_VARS_4M.fd guest_nvram
     - (for e in json zip; do nc -lc "printf 'HTTP/1.1 200 OK\n\n'; cat build/stimage.$e" 0.0.0.0 8080; done) &
     - test/boot.sh ./boot-qemu.sh build/stboot.iso guest_nvram
   artifacts:
