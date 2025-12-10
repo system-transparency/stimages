@@ -24,7 +24,13 @@ else
     echo
 fi
 
+# OCI image hack
 build_rootfs() {
+    [ -f "$ROOTAR" ] || podman build -o type=tar,dest="$ROOTAR" -f ocihack.container
+    (cd build && tar xvf ../"$ROOTAR" vmlinuz boot/vmlinuz\*)
+}
+
+build_rootfs_orig() {
     ### Build APT sources.list
     sources_list="$OUTDIR"/sources.list
     case "$DEBIAN_RELEASE" in	# https://wiki.debian.org/SourcesList

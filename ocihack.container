@@ -1,0 +1,7 @@
+FROM debian:trixie-slim
+
+RUN apt-get -qq update && apt-get upgrade -y
+RUN apt-get install -qqy linux-image-amd64
+RUN echo root:root | chpasswd
+COPY README.md /README-stimages.md
+
