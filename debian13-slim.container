@@ -1,0 +1,5 @@
+FROM debian:trixie-slim
+
+RUN apt-get -qq update && apt-get upgrade -y
+RUN apt-get install -qqy mmdebstrap fakechroot fakeroot libsystemd-shared man-db git cpio
+WORKDIR /c

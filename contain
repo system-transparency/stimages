@@ -5,7 +5,7 @@ set -eu
 # If first argument is -r, refresh the image first.
 
 IMAGE_NAME=stimage
-CONTAINERFILE=debian12-slim.container
+CONTAINERFILE=debian13-slim.container
 VOLUME_MOUNT_OPTS=		# Use :z for SELinux relabeling
 
 [ -f /etc/fedora-release ] && VOLUME_MOUNT_OPTS+=:z
