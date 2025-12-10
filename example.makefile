@@ -11,7 +11,7 @@ FLAVOUR ?= vanilla
 STIMAGE_NAME ?= stimage
 
 # Basename of the kernel, kernel cmdline and initramfs files
-BINDIST ?= debian-bookworm-amd64
+BINDIST ?= debian-trixie-amd64
 
 # URL to download image from
 NETBOOT_URL ?= http://10.0.2.2:8080/$(STIMAGE_NAME)
@@ -124,7 +124,7 @@ install-vm: $(STBOOT_ISO) $(OVMF_CODE) $(GUEST_STDATA) wwworkaround
 	virt-install \
 		--debug \
 		--name $(GUEST_NAME) \
-		--osinfo debian12 \
+		--osinfo debian13 \
 		$(VM_PERSIST) \
 		--import \
 		--boot loader="$(OVMF_CODE)",loader.readonly=yes,loader.type=pflash,loader.secure=no \

@@ -5,11 +5,11 @@ set -eu
 # NOTE: This file is manually maintained -- when the docs are being changed, someone need to update this file.
 
 # Prerequisites:
-# - Debian12 or podman
+# - Debian 12.x or podman
 # - 1.2G free space on $TMPDIR (/tmp)
 # - Internet access, for downloading Debian packages
 
-# Usage:
+# Usage, running on Debian 12.x:
 #   test/getting-started.sh && rm -irf stimages
 # Usage, running in a podman container:
 #   podman run -it --rm -v "$PWD:/c" debian:bookworm-backports /c/test/getting-started.sh

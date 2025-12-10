@@ -1,5 +1,5 @@
 This directory contains configuration for [stimages][] to build an
-example ST OS image based on Debian 12 (aka Bookworm).
+example ST OS image based on Debian 12 or newer.
 
 The resulting OS image requires a disk image with an ext4 filesystem
 labeled "STDATA" to exist when it boots. See DO_USE_STDATA in the

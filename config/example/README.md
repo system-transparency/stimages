@@ -1,5 +1,5 @@
 This directory contains configuration for [stimages][] to build an
-example ST OS image based on Debian 12 (aka Bookworm).
+example ST OS image based on Debian 12 or newer.
 
 The [build-initramfs][] script expects a number of files to exist in
 this directory. Some of the paths depend on the FLAVOUR argument

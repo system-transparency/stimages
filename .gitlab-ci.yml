@@ -10,13 +10,13 @@ build-example-os:
   stage: build/1
   tags:
     - longrunning
-  image: debian:bookworm-backports
+  image: debian:trixie
   before_script:
     - apt-get -qq update
-    - apt-get install -qqy golang-1.23-go ca-certificates make cpio mmdebstrap libsystemd-shared
+    - apt-get install -qqy golang-1.24-go ca-certificates make cpio mmdebstrap fakeroot fakechroot libsystemd-shared
     - |
       export GOBIN="${PWD}"/.go/bin; mkdir -p "$GOBIN"
-      export PATH="${PATH}":/usr/lib/go-1.23/bin:"${GOBIN}"
+      export PATH="${PATH}":/usr/lib/go-1.24/bin:"${GOBIN}"
     - go install system-transparency.org/stmgr@"${STMGR_VERSION}"
   script:
     - echo stimages > config/example/pw.root # Default root password in OS image
@@ -32,13 +32,13 @@ build-example-os:
 # into the stboot binary.
 build-stboot:
   stage: build/2
-  image: debian:bookworm-backports
+  image: debian:trixie
   before_script:
     - apt-get -qq update
-    - apt-get install -qqy golang-1.23-go ca-certificates pigz make cpio
+    - apt-get install -qqy golang-1.24-go ca-certificates pigz make cpio
     - |
       export GOBIN="${PWD}"/.go/bin; mkdir -p "$GOBIN"
-      export PATH="${PATH}":/usr/lib/go-1.23/bin:"${GOBIN}"
+      export PATH="${PATH}":/usr/lib/go-1.24/bin:"${GOBIN}"
     - go install system-transparency.org/stmgr@"${STMGR_VERSION}"
   script:
     - make stboot
@@ -54,12 +54,12 @@ boot-example:
   allow_failure: true
   tags:
     - longrunning
-  image: debian:bookworm-backports
+  image: debian:trixie
   before_script:
     - apt-get -qq update
     - apt-get install -qqy make qemu-system-x86 ovmf ncat
   script:
-    - cp /usr/share/OVMF/OVMF_VARS.fd guest_nvram
+    - cp /usr/share/OVMF/OVMF_VARS_4M.fd guest_nvram
     - (for e in json zip; do nc -lc "printf 'HTTP/1.1 200 OK\n\n'; cat build/stimage.$e" 0.0.0.0 8080; done) &
     - test/boot.sh ./boot-qemu.sh build/stboot.iso guest_nvram
   artifacts:
