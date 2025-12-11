@@ -19,8 +19,9 @@ build-example-os:
       export GOBIN="${PWD}"/.go/bin; mkdir -p "$GOBIN"
       export PATH="${PATH}":/usr/lib/go-1.24/bin:"${GOBIN}"
     - go install system-transparency.org/stmgr@"${STMGR_VERSION}"
-    - echo "$(id -n):100000:65536" >> /etc/subuid
-    - echo "$(id -n):100000:65536" >> /etc/subgid
+    - echo "$(id -un):100000:65536" >> /etc/subuid
+    - echo "$(id -un):100000:65536" >> /etc/subgid
+    - cat /etc/sub*id
   script:
     - echo stimages > config/example/pw.root # Default root password in OS image
     - make stimage
