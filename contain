@@ -27,4 +27,5 @@ fi
 podman build -q -t "$IMAGE_NAME" -f "$CONTAINERFILE"
 
 # Run image in new container with current directory mounted on /c
-podman run --rm --volume "${PWD}:/c${VOLUME_MOUNT_OPTS}" "$IMAGE_NAME" "$@"
+# NOTE: -i for 'read' in build-initramfs
+podman run -i --rm --volume "${PWD}:/c${VOLUME_MOUNT_OPTS}" "$IMAGE_NAME" "$@"

@@ -20,8 +20,6 @@ ROOTAR="$OUTDIR"/tmproot.tar
 if [[ -r ${CONFIG}/pw.root ]]; then
     PW_ROOT="$(cat "${CONFIG}/pw.root")"
 else
-    # NOTE: Doesn't work in ./contain
-    # TODO: Detect non-interactive container and bail
     read -rs -p "Root password to set in image: " PW_ROOT
     echo
 fi
