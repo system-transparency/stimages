@@ -96,6 +96,7 @@ create_img() {
 }
 
 install_dependencies
+command -v stboot || { echo "$0: stboot not found in path"; exit 1; }
 create_default_stboot_config
 build_archive "${IDIR}"/stboot.cpio.gz $uroot_files
 create_img
