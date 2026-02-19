@@ -79,9 +79,9 @@ keys/cert.pem keys/key.pem:
 ####################
 GUEST_DATADIR ?= hosts
 GUEST_NAME ?= example-host
-GUEST_OVMF_VARS ?= $(GUEST_DATADIR)/$(GUEST_NAME)/OVMF_VARS.fd
+GUEST_OVMF_VARS ?= $(GUEST_DATADIR)/$(GUEST_NAME)/OVMF_VARS_4M.fd
 OVMF_DIR = /usr/share/OVMF
-OVMF_CODE = $(OVMF_DIR)/OVMF_CODE.fd
+OVMF_CODE = $(OVMF_DIR)/OVMF_CODE_4M.fd
 
 ifdef DO_USE_STDATA
 GUEST_STDATA ?= $(GUEST_DATADIR)/$(GUEST_NAME)/stdata.img
@@ -100,7 +100,7 @@ $(GUEST_DATADIR)/$(GUEST_NAME):
 	mkdir -p $@
 
 $(GUEST_OVMF_VARS): $(GUEST_DATADIR)/$(GUEST_NAME)
-	cp $(OVMF_DIR)/OVMF_VARS.fd $@
+	cp $(OVMF_DIR)/OVMF_VARS_4M.fd $@
 
 $(GUEST_STDATA): $(GUEST_DATADIR)/$(GUEST_NAME)
 	./mkstdata.sh $@ $(GUEST_NAME) -dhcp
@@ -128,7 +128,7 @@ install-vm: $(STBOOT_ISO) $(OVMF_CODE) $(GUEST_STDATA) wwworkaround
 		$(VM_PERSIST) \
 		--import \
 		--boot loader="$(OVMF_CODE)",loader.readonly=yes,loader.type=pflash,loader.secure=no \
-		--boot nvram.template="$(OVMF_DIR)/OVMF_VARS.fd" \
+		--boot nvram.template="$(OVMF_DIR)/OVMF_VARS_4M.fd" \
 		--virt-type kvm \
 		--graphics none \
 		--memory $(VM_RAM) \
