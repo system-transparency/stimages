@@ -11,7 +11,7 @@ GUEST_OVMF_VARS="$1"; shift
 QEMU_RAM=${QEMU_RAM-4G}
 QEMU_STDATA_DRIVE=${QEMU_STDATA_DRIVE-}
 DISPLAY_MODE=${DISPLAY_MODE--nographic} # If console=ttyS0,115200: '-nographic'; else '-display gtk'.
-OVMF_CODE=${OVMF_CODE-/usr/share/OVMF/OVMF_CODE.fd}
+OVMF_CODE=${OVMF_CODE-/usr/share/OVMF/OVMF_CODE_4M.fd}
 
 do_boot() {
     qemu-system-x86_64 \
